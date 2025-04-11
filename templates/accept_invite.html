@@ -1,0 +1,78 @@
+{% extends 'base.html' %}
+
+{% block title %}Aceitar Convite - O Guardião{% endblock %}
+
+{% block auth_content %}
+<div class="auth-container">
+    <div class="auth-card">
+        <div class="auth-logo">
+            <a href="{{ url_for('index') }}">
+                <img src="{{ url_for('static', filename='svg/logo.svg') }}" alt="O Guardião Logo" width="80">
+            </a>
+        </div>
+        
+        <h1 class="auth-title">Aceitar Convite</h1>
+        
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                {% for category, message in messages %}
+                    <div class="alert alert-{{ category }}">{{ message }}</div>
+                {% endfor %}
+            {% endif %}
+        {% endwith %}
+        
+        <div class="alert alert-info">
+            <i class="fas fa-info-circle"></i> Você foi convidado por <strong>{{ invite.inviter.name }}</strong> para se juntar à organização <strong>{{ invite.organization.name }}</strong> como <strong>{% if invite.role == 'admin' %}Administrador{% else %}Operador{% endif %}</strong>.
+        </div>
+        
+        <form method="POST" action="{{ url_for('accept_invite', token=invite.token) }}">
+            {{ form.hidden_tag() }}
+            {{ form.token }}
+            
+            <div class="form-group">
+                {{ form.name.label(class="form-label") }}
+                {{ form.name(class="form-control", placeholder="Seu nome completo") }}
+                {% if form.name.errors %}
+                    {% for error in form.name.errors %}
+                        <div class="form-text text-danger">{{ error }}</div>
+                    {% endfor %}
+                {% endif %}
+            </div>
+            
+            <div class="form-group">
+                <label class="form-label">Email</label>
+                <input type="email" class="form-control" value="{{ invite.email }}" disabled>
+            </div>
+            
+            <div class="form-group">
+                {{ form.password.label(class="form-label") }}
+                {{ form.password(class="form-control", placeholder="••••••••") }}
+                {% if form.password.errors %}
+                    {% for error in form.password.errors %}
+                        <div class="form-text text-danger">{{ error }}</div>
+                    {% endfor %}
+                {% endif %}
+                <div class="form-text">A senha deve ter pelo menos 8 caracteres.</div>
+            </div>
+            
+            <div class="form-group">
+                {{ form.confirm_password.label(class="form-label") }}
+                {{ form.confirm_password(class="form-control", placeholder="••••••••") }}
+                {% if form.confirm_password.errors %}
+                    {% for error in form.confirm_password.errors %}
+                        <div class="form-text text-danger">{{ error }}</div>
+                    {% endfor %}
+                {% endif %}
+            </div>
+            
+            <div class="form-group">
+                <button type="submit" class="btn btn-primary w-100">Criar Conta</button>
+            </div>
+        </form>
+        
+        <div class="text-center mt-3">
+            <p>Já tem uma conta? <a href="{{ url_for('login') }}">Login</a></p>
+        </div>
+    </div>
+</div>
+{% endblock %}

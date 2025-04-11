@@ -1,0 +1,15 @@
+<div class="alert alert-{{ category }}">
+    {% if category == 'success' %}
+        <i class="fas fa-check-circle"></i>
+    {% elif category == 'error' or category == 'danger' %}
+        <i class="fas fa-exclamation-circle"></i>
+    {% elif category == 'warning' %}
+        <i class="fas fa-exclamation-triangle"></i>
+    {% elif category == 'info' %}
+        <i class="fas fa-info-circle"></i>
+    {% endif %}
+    {{ message }}
+    <button type="button" class="alert-close" aria-label="Fechar">
+        <span aria-hidden="true">&times;</span>
+    </button>
+</div>

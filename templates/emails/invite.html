@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Convite para O Guardião</title>
+    <style>
+        body {
+            font-family: 'Arial', sans-serif;
+            line-height: 1.6;
+            color: #374151;
+            margin: 0;
+            padding: 0;
+        }
+        .email-container {
+            max-width: 600px;
+            margin: 0 auto;
+        }
+        .email-header {
+            background-color: #1E3A8A;
+            color: #FFFFFF;
+            padding: 20px;
+            text-align: center;
+        }
+        .email-body {
+            background-color: #FFFFFF;
+            padding: 20px;
+            border-radius: 0 0 5px 5px;
+        }
+        .email-footer {
+            text-align: center;
+            padding: 15px;
+            font-size: 12px;
+            color: #6B7280;
+        }
+        .button {
+            display: inline-block;
+            background-color: #3B82F6;
+            color: #FFFFFF;
+            padding: 12px 24px;
+            text-decoration: none;
+            border-radius: 5px;
+            font-weight: bold;
+            margin: 20px 0;
+        }
+        .logo {
+            width: 80px;
+            height: auto;
+        }
+    </style>
+</head>
+<body>
+    <div class="email-container">
+        <div class="email-header">
+            <img src="cid:logo" alt="O Guardião Logo" class="logo">
+            <h1>O Guardião</h1>
+        </div>
+        
+        <div class="email-body">
+            <h2>Você foi convidado para O Guardião</h2>
+            
+            <p>Olá,</p>
+            
+            <p><strong>{{ invite.inviter.name }}</strong> convidou você para fazer parte da organização <strong>{{ invite.organization.name }}</strong> com a função de <strong>{% if invite.role == 'admin' %}Administrador{% else %}Operador{% endif %}</strong>.</p>
+            
+            <p>O Guardião é uma plataforma completa para gestão de certificados digitais, proporcionando controle, segurança e alertas de vencimento para seus certificados e-CNPJ e e-CPF.</p>
+            
+            <div style="text-align: center;">
+                <a href="{{ accept_url }}" class="button">Aceitar Convite</a>
+            </div>
+            
+            <p>Este convite expira em 7 dias. Se você não reconhece este convite, por favor, ignore este email.</p>
+            
+            <p>Atenciosamente,<br>Equipe O Guardião</p>
+        </div>
+        
+        <div class="email-footer">
+            <p>&copy; 2023 O Guardião - Todos os direitos reservados</p>
+            <p>Este é um email automático, por favor não responda.</p>
+        </div>
+    </div>
+</body>
+</html>

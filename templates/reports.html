@@ -1,0 +1,157 @@
+{% extends 'base.html' %}
+
+{% block title %}Relatórios - O Guardião{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h1>Relatórios</h1>
+    <div>
+        <a href="{{ url_for('dashboard') }}" class="btn btn-secondary">
+            <i class="fas fa-arrow-left"></i> Voltar
+        </a>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-md-6">
+        <div class="card mb-4">
+            <div class="card-header">
+                <h2 class="card-title">Certificados</h2>
+            </div>
+            <div class="card-body">
+                <p>Exporte a lista completa de certificados com informações detalhadas.</p>
+                <a href="{{ url_for('export_certificates') }}" class="btn btn-primary">
+                    <i class="fas fa-file-csv"></i> Exportar CSV
+                </a>
+            </div>
+        </div>
+        
+        <div class="card mb-4">
+            <div class="card-header">
+                <h2 class="card-title">Certificados Expirados</h2>
+            </div>
+            <div class="card-body">
+                <p>Lista de certificados que já expiraram.</p>
+                <a href="{{ url_for('export_certificates') }}?status=expired" class="btn btn-primary">
+                    <i class="fas fa-file-csv"></i> Exportar CSV
+                </a>
+            </div>
+        </div>
+        
+        <div class="card mb-4">
+            <div class="card-header">
+                <h2 class="card-title">Certificados a Expirar</h2>
+            </div>
+            <div class="card-body">
+                <p>Lista de certificados que expirarão nos próximos 30 dias.</p>
+                <a href="{{ url_for('export_certificates') }}?status=expiring-soon" class="btn btn-primary">
+                    <i class="fas fa-file-csv"></i> Exportar CSV
+                </a>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-6">
+        <div class="card mb-4">
+            <div class="card-header">
+                <h2 class="card-title">Empresas</h2>
+            </div>
+            <div class="card-body">
+                <p>Lista de todas as empresas cadastradas no sistema.</p>
+                <a href="{{ url_for('export_companies') if 'export_companies' in current_app.view_functions else '#' }}" class="btn btn-primary">
+                    <i class="fas fa-file-csv"></i> Exportar CSV
+                </a>
+            </div>
+        </div>
+        
+        <div class="card mb-4">
+            <div class="card-header">
+                <h2 class="card-title">Logs de Auditoria</h2>
+            </div>
+            <div class="card-body">
+                <p>Registro de todas as ações realizadas no sistema.</p>
+                <a href="{{ url_for('export_audit_logs') if 'export_audit_logs' in current_app.view_functions else '#' }}" class="btn btn-primary">
+                    <i class="fas fa-file-csv"></i> Exportar CSV
+                </a>
+            </div>
+        </div>
+        
+        <div class="card mb-4">
+            <div class="card-header">
+                <h2 class="card-title">Relatório Geral</h2>
+            </div>
+            <div class="card-body">
+                <p>Relatório completo com informações consolidadas sobre certificados, empresas e grupos.</p>
+                <a href="{{ url_for('export_general_report') if 'export_general_report' in current_app.view_functions else '#' }}" class="btn btn-primary">
+                    <i class="fas fa-file-pdf"></i> Exportar PDF
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Custom report section -->
+<div class="card mt-4">
+    <div class="card-header">
+        <h2 class="card-title">Relatório Personalizado</h2>
+    </div>
+    <div class="card-body">
+        <form method="GET" action="{{ url_for('export_custom_report') if 'export_custom_report' in current_app.view_functions else '#' }}">
+            <div class="row">
+                <div class="col-md-4">
+                    <div class="form-group">
+                        <label for="start_date" class="form-label">Data Inicial</label>
+                        <input type="date" id="start_date" name="start_date" class="form-control">
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="form-group">
+                        <label for="end_date" class="form-label">Data Final</label>
+                        <input type="date" id="end_date" name="end_date" class="form-control">
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="form-group">
+                        <label for="report_type" class="form-label">Tipo de Relatório</label>
+                        <select id="report_type" name="report_type" class="form-control">
+                            <option value="certificates">Certificados</option>
+                            <option value="companies">Empresas</option>
+                            <option value="audit">Logs de Auditoria</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="form-group mt-3">
+                <label for="group_id" class="form-label">Filtrar por Grupo</label>
+                <select id="group_id" name="group_id" class="form-control">
+                    <option value="">Todos os grupos</option>
+                    {% for group in groups %}
+                        <option value="{{ group.id }}">{{ group.name }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            
+            <div class="form-group">
+                <label for="format" class="form-label">Formato</label>
+                <div class="form-check">
+                    <input class="form-check-input" type="radio" name="format" id="format_csv" value="csv" checked>
+                    <label class="form-check-label" for="format_csv">
+                        CSV
+                    </label>
+                </div>
+                <div class="form-check">
+                    <input class="form-check-input" type="radio" name="format" id="format_pdf" value="pdf">
+                    <label class="form-check-label" for="format_pdf">
+                        PDF
+                    </label>
+                </div>
+            </div>
+            
+            <button type="submit" class="btn btn-primary">
+                <i class="fas fa-download"></i> Gerar Relatório
+            </button>
+        </form>
+    </div>
+</div>
+{% endblock %}

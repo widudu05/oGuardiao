@@ -1,133 +1,27 @@
-from cryptography.hazmat.primitives.ciphers import Cipher, algorithms, modes
-from cryptography.hazmat.backends import default_backend
 import os
-import base64
-import boto3
-from botocore.exceptions import ClientError
-from datetime import datetime, timedelta
-import logging
 import pyotp
 import qrcode
-from io import BytesIO
 import base64
-from models import Alerta, Certificado, LogAuditoria
-from app import db, app
-from flask import request
-
-logger = logging.getLogger(__name__)
-
-def encrypt_certificate_password(password, key=None):
-    """
-    Encrypt certificate password using AES-256
-    Returns encrypted password and IV
-    """
-    if key is None:
-        key = app.config.get('SECRET_KEY', os.urandom(32))[:32].encode()
-    else:
-        key = key.encode()
-        
-    # Ensure key is 32 bytes (256 bits)
-    if len(key) < 32:
-        key = key.ljust(32, b'\0')
-    elif len(key) > 32:
-        key = key[:32]
-    
-    # Generate a random 16-byte initialization vector
-    iv = os.urandom(16)
-    
-    # Create an encryptor
-    cipher = Cipher(algorithms.AES(key), modes.CBC(iv), backend=default_backend())
-    encryptor = cipher.encryptor()
-    
-    # Pad the plaintext to a multiple of 16 bytes
-    padded_password = password.encode()
-    padding_length = 16 - (len(padded_password) % 16)
-    padded_password += bytes([padding_length]) * padding_length
-    
-    # Encrypt the padded plaintext
-    ciphertext = encryptor.update(padded_password) + encryptor.finalize()
-    
-    # Return base64 encoded ciphertext and IV
-    return base64.b64encode(ciphertext).decode(), base64.b64encode(iv).decode()
-
-def decrypt_certificate_password(encrypted_password, iv, key=None):
-    """
-    Decrypt certificate password
-    """
-    if key is None:
-        key = app.config.get('SECRET_KEY', '').encode()[:32]
-    else:
-        key = key.encode()
-        
-    # Ensure key is 32 bytes (256 bits)
-    if len(key) < 32:
-        key = key.ljust(32, b'\0')
-    elif len(key) > 32:
-        key = key[:32]
-    
-    # Decode the base64 encoded ciphertext and IV
-    ciphertext = base64.b64decode(encrypted_password)
-    iv = base64.b64decode(iv)
-    
-    # Create a decryptor
-    cipher = Cipher(algorithms.AES(key), modes.CBC(iv), backend=default_backend())
-    decryptor = cipher.decryptor()
-    
-    # Decrypt the ciphertext
-    padded_plaintext = decryptor.update(ciphertext) + decryptor.finalize()
-    
-    # Remove the padding
-    padding_length = padded_plaintext[-1]
-    plaintext = padded_plaintext[:-padding_length]
-    
-    return plaintext.decode()
-
-def upload_certificate_to_s3(file, file_name, bucket=None):
-    """
-    Upload certificate to S3 with AES-256 server-side encryption
-    Returns the S3 object URL
-    """
-    if bucket is None:
-        bucket = app.config.get('AWS_S3_BUCKET_NAME')
-    
-    # Create a boto3 client
-    s3_client = boto3.client(
-        's3',
-        aws_access_key_id=app.config.get('AWS_ACCESS_KEY_ID'),
-        aws_secret_access_key=app.config.get('AWS_SECRET_ACCESS_KEY'),
-        region_name=app.config.get('AWS_S3_REGION')
-    )
-    
-    try:
-        # Upload the file with server-side encryption
-        s3_client.upload_fileobj(
-            file,
-            bucket,
-            file_name,
-            ExtraArgs={
-                'ServerSideEncryption': 'AES256',
-                'ContentType': 'application/x-pkcs12'
-            }
-        )
-        
-        # Generate a URL for the file
-        url = f"s3://{bucket}/{file_name}"
-        return url
-    
-    except ClientError as e:
-        logger.error(f"Error uploading certificate to S3: {e}")
-        raise
+import io
+from cryptography.hazmat.primitives.ciphers import Cipher, algorithms, modes
+from cryptography.hazmat.primitives import padding
+from cryptography.hazmat.backends import default_backend
+from datetime import datetime, timedelta
+from flask import current_app, flash, url_for, render_template
+from flask_mail import Message
+from app import db, mail
+from models import AuditLog, Certificate
 
 def generate_mfa_secret():
-    """Generate a new MFA secret key"""
+    """Generate a new MFA secret for a user"""
     return pyotp.random_base32()
 
 def generate_mfa_qr_code(user_email, secret):
-    """Generate QR code for MFA setup"""
+    """Generate a QR code for MFA setup"""
     totp = pyotp.TOTP(secret)
     uri = totp.provisioning_uri(user_email, issuer_name="O Guardião")
     
-    # Generate QR code
+    # Create QR code image
     qr = qrcode.QRCode(
         version=1,
         error_correction=qrcode.constants.ERROR_CORRECT_L,
@@ -139,62 +33,160 @@ def generate_mfa_qr_code(user_email, secret):
     
     img = qr.make_image(fill_color="black", back_color="white")
     
-    # Convert to base64 for HTML embedding
-    buffered = BytesIO()
-    img.save(buffered)
-    return base64.b64encode(buffered.getvalue()).decode()
+    # Convert to base64 for embedding in HTML
+    buffer = io.BytesIO()
+    img.save(buffer)
+    img_str = base64.b64encode(buffer.getvalue()).decode('utf-8')
+    
+    return f"data:image/png;base64,{img_str}"
 
 def verify_mfa_code(secret, code):
-    """Verify MFA code"""
+    """Verify a MFA code against a secret"""
     totp = pyotp.TOTP(secret)
     return totp.verify(code)
 
-def check_for_expiring_certificates():
-    """
-    Check for certificates that are about to expire and create alerts
-    """
-    today = datetime.utcnow().date()
+def log_audit_event(user_id, action, details=None, ip_address=None):
+    """Log an audit event"""
+    audit_log = AuditLog(
+        user_id=user_id,
+        action=action,
+        details=details,
+        ip_address=ip_address
+    )
+    db.session.add(audit_log)
+    try:
+        db.session.commit()
+    except Exception as e:
+        current_app.logger.error(f"Failed to save audit log: {str(e)}")
+        db.session.rollback()
+
+def encrypt_certificate_password(password):
+    """Encrypt a certificate password using AES-256"""
+    # Get encryption key from environment
+    key = os.environ.get("CERTIFICATE_ENCRYPTION_KEY")
+    if not key:
+        # Generate a random key if not set (not recommended for production)
+        key = os.urandom(32)
+    elif isinstance(key, str):
+        # Convert string key to bytes, using padding if needed
+        key = key.encode('utf-8')
+        if len(key) < 32:
+            key = key.ljust(32, b'\0')
+        elif len(key) > 32:
+            key = key[:32]
+    
+    # Generate a random IV
+    iv = os.urandom(16)
+    
+    # Create an encryptor
+    backend = default_backend()
+    cipher = Cipher(algorithms.AES(key), modes.CBC(iv), backend=backend)
+    encryptor = cipher.encryptor()
+    
+    # Pad the password
+    padder = padding.PKCS7(algorithms.AES.block_size).padder()
+    padded_data = padder.update(password.encode('utf-8')) + padder.finalize()
+    
+    # Encrypt the password
+    encrypted_password = encryptor.update(padded_data) + encryptor.finalize()
+    
+    return encrypted_password, iv
+
+def decrypt_certificate_password(encrypted_password, iv):
+    """Decrypt a certificate password"""
+    # Get encryption key from environment
+    key = os.environ.get("CERTIFICATE_ENCRYPTION_KEY")
+    if not key:
+        current_app.logger.error("Encryption key not found in environment")
+        return None
+    elif isinstance(key, str):
+        # Convert string key to bytes, using padding if needed
+        key = key.encode('utf-8')
+        if len(key) < 32:
+            key = key.ljust(32, b'\0')
+        elif len(key) > 32:
+            key = key[:32]
+    
+    # Create a decryptor
+    backend = default_backend()
+    cipher = Cipher(algorithms.AES(key), modes.CBC(iv), backend=backend)
+    decryptor = cipher.decryptor()
+    
+    # Decrypt the password
+    decrypted_padded = decryptor.update(encrypted_password) + decryptor.finalize()
+    
+    # Unpad the result
+    unpadder = padding.PKCS7(algorithms.AES.block_size).unpadder()
+    try:
+        decrypted_data = unpadder.update(decrypted_padded) + unpadder.finalize()
+        return decrypted_data.decode('utf-8')
+    except Exception as e:
+        current_app.logger.error(f"Failed to decrypt password: {str(e)}")
+        return None
+
+def send_invitation_email(invite):
+    """Send an invitation email to a new user"""
+    try:
+        accept_url = url_for('accept_invite', token=invite.token, _external=True)
+        
+        msg = Message(
+            subject="Convite para O Guardião",
+            recipients=[invite.email],
+            html=render_template('emails/invite.html', 
+                                invite=invite, 
+                                accept_url=accept_url)
+        )
+        mail.send(msg)
+        return True
+    except Exception as e:
+        current_app.logger.error(f"Failed to send invitation email: {str(e)}")
+        return False
+
+def send_expiration_alert(certificate, days_left):
+    """Send certificate expiration alert email"""
+    try:
+        # Get admin users for the organization
+        from models import User
+        admins = User.query.filter_by(
+            organization_id=certificate.company.organization_id,
+            role__in=['admin', 'master_admin']
+        ).all()
+        
+        if not admins:
+            current_app.logger.warning(f"No admins found for certificate {certificate.id} alert")
+            return False
+        
+        recipients = [admin.email for admin in admins]
+        
+        msg = Message(
+            subject=f"ALERTA: Certificado expirando em {days_left} dias",
+            recipients=recipients,
+            html=render_template('emails/certificate_expiration.html', 
+                                certificate=certificate, 
+                                days_left=days_left)
+        )
+        mail.send(msg)
+        return True
+    except Exception as e:
+        current_app.logger.error(f"Failed to send expiration alert: {str(e)}")
+        return False
+
+def check_expiring_certificates():
+    """Check for certificates that are expiring soon and send alerts"""
+    today = datetime.now().date()
     
     # Check for certificates expiring in 30, 15, and 5 days
     alert_days = [30, 15, 5]
     
     for days in alert_days:
-        target_date = today + timedelta(days=days)
+        expiry_date = today + timedelta(days=days)
+        certificates = Certificate.query.filter_by(expiry_date=expiry_date).all()
         
-        # Find certificates that expire on the target date and don't have an alert yet
-        expiring_certs = Certificado.query.filter(
-            Certificado.data_vencimento.between(
-                datetime.combine(target_date, datetime.min.time()),
-                datetime.combine(target_date, datetime.max.time())
-            )
-        ).all()
-        
-        for cert in expiring_certs:
-            # Check if an alert already exists for this certificate and days
-            existing_alert = Alerta.query.filter_by(
-                certificado_id=cert.id,
-                dias_restantes=days
-            ).first()
+        for cert in certificates:
+            send_expiration_alert(cert, days)
             
-            if not existing_alert:
-                # Create a new alert
-                alert = Alerta(
-                    certificado_id=cert.id,
-                    dias_restantes=days
-                )
-                db.session.add(alert)
-    
-    db.session.commit()
-
-def log_audit(user_id, action, description=None):
-    """
-    Log an audit entry
-    """
-    log = LogAuditoria(
-        usuario_id=user_id,
-        acao=action,
-        descricao=description,
-        endereco_ip=request.remote_addr
-    )
-    db.session.add(log)
-    db.session.commit()
+    # Return count of certificates expiring in next 30 days (for dashboard)
+    return Certificate.query.filter(
+        Certificate.expiry_date <= today + timedelta(days=30),
+        Certificate.expiry_date > today
+    ).count()

@@ -1,156 +1,292 @@
-// Main JavaScript file for O Guardião
+// Main JavaScript for O Guardião
 
+// Wait for the DOM to be fully loaded
 document.addEventListener('DOMContentLoaded', function() {
-    // Toggle sidebar
-    const sidebarToggle = document.getElementById('sidebar-toggle');
-    const sidebar = document.getElementById('sidebar');
-    const sidebarText = document.querySelectorAll('.sidebar-text');
+  // Initialize mobile menu toggle
+  initMobileMenu();
+  
+  // Initialize modals
+  initModals();
+  
+  // Initialize tooltips
+  initTooltips();
+  
+  // Initialize confirm dialogs
+  initConfirmDialogs();
+  
+  // Initialize password visibility toggle
+  initPasswordToggles();
+  
+  // Format CNPJ inputs
+  initCNPJFormatting();
+  
+  // Show alerts with auto-dismiss
+  initAlerts();
+  
+  // Initialize any active tab
+  initTabs();
+});
+
+// Mobile menu toggle
+function initMobileMenu() {
+  const menuToggle = document.querySelector('.btn-mobile-menu');
+  const sidebar = document.querySelector('.sidebar');
+  
+  if (menuToggle && sidebar) {
+    menuToggle.addEventListener('click', function() {
+      sidebar.classList.toggle('active');
+    });
     
-    if (sidebarToggle && sidebar) {
-        sidebarToggle.addEventListener('click', function() {
-            sidebar.classList.toggle('sidebar-collapsed');
-            sidebar.classList.toggle('sidebar-expanded');
-            
-            sidebarText.forEach(function(element) {
-                element.classList.toggle('hidden');
-            });
-        });
+    // Close sidebar when clicking outside
+    document.addEventListener('click', function(event) {
+      if (sidebar.classList.contains('active') && 
+          !sidebar.contains(event.target) && 
+          event.target !== menuToggle) {
+        sidebar.classList.remove('active');
+      }
+    });
+  }
+}
+
+// Modal initialization
+function initModals() {
+  const modalTriggers = document.querySelectorAll('[data-modal-target]');
+  const modalCloseButtons = document.querySelectorAll('[data-modal-close]');
+  
+  modalTriggers.forEach(trigger => {
+    trigger.addEventListener('click', function() {
+      const modalId = this.getAttribute('data-modal-target');
+      const modal = document.getElementById(modalId);
+      
+      if (modal) {
+        modal.style.display = 'block';
+        document.body.style.overflow = 'hidden';
+      }
+    });
+  });
+  
+  modalCloseButtons.forEach(button => {
+    button.addEventListener('click', function() {
+      const modal = this.closest('.modal');
+      if (modal) {
+        modal.style.display = 'none';
+        document.body.style.overflow = '';
+      }
+    });
+  });
+  
+  // Close modal when clicking outside content
+  window.addEventListener('click', function(event) {
+    if (event.target.classList.contains('modal')) {
+      event.target.style.display = 'none';
+      document.body.style.overflow = '';
+    }
+  });
+}
+
+// Tooltip initialization
+function initTooltips() {
+  const tooltips = document.querySelectorAll('[data-tooltip]');
+  
+  tooltips.forEach(tooltip => {
+    tooltip.addEventListener('mouseenter', function() {
+      const tooltipText = this.getAttribute('data-tooltip');
+      
+      const tooltipElement = document.createElement('div');
+      tooltipElement.classList.add('tooltip');
+      tooltipElement.textContent = tooltipText;
+      
+      document.body.appendChild(tooltipElement);
+      
+      const rect = this.getBoundingClientRect();
+      tooltipElement.style.left = `${rect.left + (rect.width / 2) - (tooltipElement.offsetWidth / 2)}px`;
+      tooltipElement.style.top = `${rect.top - tooltipElement.offsetHeight - 10}px`;
+      
+      this._tooltipElement = tooltipElement;
+    });
+    
+    tooltip.addEventListener('mouseleave', function() {
+      if (this._tooltipElement) {
+        document.body.removeChild(this._tooltipElement);
+        this._tooltipElement = null;
+      }
+    });
+  });
+}
+
+// Confirm dialog initialization
+function initConfirmDialogs() {
+  const confirmButtons = document.querySelectorAll('[data-confirm]');
+  
+  confirmButtons.forEach(button => {
+    button.addEventListener('click', function(event) {
+      const message = this.getAttribute('data-confirm') || 'Tem certeza que deseja realizar esta ação?';
+      
+      if (!confirm(message)) {
+        event.preventDefault();
+        return false;
+      }
+    });
+  });
+}
+
+// Password visibility toggle
+function initPasswordToggles() {
+  const toggles = document.querySelectorAll('.password-toggle');
+  
+  toggles.forEach(toggle => {
+    toggle.addEventListener('click', function() {
+      const passwordInput = this.previousElementSibling;
+      
+      if (passwordInput.type === 'password') {
+        passwordInput.type = 'text';
+        this.innerHTML = '<i class="fas fa-eye-slash"></i>';
+      } else {
+        passwordInput.type = 'password';
+        this.innerHTML = '<i class="fas fa-eye"></i>';
+      }
+    });
+  });
+}
+
+// CNPJ formatting
+function initCNPJFormatting() {
+  const cnpjInputs = document.querySelectorAll('input[data-mask="cnpj"]');
+  
+  cnpjInputs.forEach(input => {
+    input.addEventListener('input', function(e) {
+      let value = e.target.value;
+      
+      // Remove non-digits
+      value = value.replace(/\D/g, '');
+      
+      // Apply CNPJ mask: XX.XXX.XXX/XXXX-XX
+      if (value.length <= 2) {
+        // Do nothing for now
+      } else if (value.length <= 5) {
+        value = value.replace(/^(\d{2})(\d{1,3})/, '$1.$2');
+      } else if (value.length <= 8) {
+        value = value.replace(/^(\d{2})(\d{3})(\d{1,3})/, '$1.$2.$3');
+      } else if (value.length <= 12) {
+        value = value.replace(/^(\d{2})(\d{3})(\d{3})(\d{1,4})/, '$1.$2.$3/$4');
+      } else {
+        value = value.replace(/^(\d{2})(\d{3})(\d{3})(\d{4})(\d{1,2})/, '$1.$2.$3/$4-$5');
+      }
+      
+      e.target.value = value;
+    });
+  });
+}
+
+// Alert auto-dismiss
+function initAlerts() {
+  const alerts = document.querySelectorAll('.alert');
+  
+  alerts.forEach(alert => {
+    // Only auto-dismiss success/info alerts
+    if (alert.classList.contains('alert-success') || alert.classList.contains('alert-info')) {
+      setTimeout(() => {
+        alert.style.opacity = '0';
+        setTimeout(() => {
+          alert.style.display = 'none';
+        }, 300);
+      }, 5000);
     }
     
-    // Format CNPJ inputs
-    const cnpjInputs = document.querySelectorAll('.cnpj-input');
+    // Add close button functionality
+    const closeButton = alert.querySelector('.alert-close');
+    if (closeButton) {
+      closeButton.addEventListener('click', function() {
+        alert.style.opacity = '0';
+        setTimeout(() => {
+          alert.style.display = 'none';
+        }, 300);
+      });
+    }
+  });
+}
+
+// Tab initialization
+function initTabs() {
+  const tabGroups = document.querySelectorAll('.tab-group');
+  
+  tabGroups.forEach(group => {
+    const tabs = group.querySelectorAll('.tab');
+    const panes = group.querySelectorAll('.tab-pane');
     
-    cnpjInputs.forEach(function(input) {
-        input.addEventListener('input', function(e) {
-            let value = e.target.value.replace(/\D/g, '');
-            
-            if (value.length > 14) {
-                value = value.substring(0, 14);
-            }
-            
-            if (value.length > 12) {
-                value = value.replace(/^(\d{2})(\d{3})(\d{3})(\d{4})(\d{2})$/, '$1.$2.$3/$4-$5');
-            } else if (value.length > 8) {
-                value = value.replace(/^(\d{2})(\d{3})(\d{3})(\d+)$/, '$1.$2.$3/$4');
-            } else if (value.length > 5) {
-                value = value.replace(/^(\d{2})(\d{3})(\d+)$/, '$1.$2.$3');
-            } else if (value.length > 2) {
-                value = value.replace(/^(\d{2})(\d+)$/, '$1.$2');
-            }
-            
-            e.target.value = value;
-        });
-    });
-    
-    // Format date inputs
-    const dateInputs = document.querySelectorAll('.date-input');
-    
-    dateInputs.forEach(function(input) {
-        input.addEventListener('input', function(e) {
-            let value = e.target.value.replace(/\D/g, '');
-            
-            if (value.length > 8) {
-                value = value.substring(0, 8);
-            }
-            
-            if (value.length > 4) {
-                value = value.replace(/^(\d{2})(\d{2})(\d+)$/, '$1/$2/$3');
-            } else if (value.length > 2) {
-                value = value.replace(/^(\d{2})(\d+)$/, '$1/$2');
-            }
-            
-            e.target.value = value;
-        });
-    });
-    
-    // Flash message auto-hide
-    const flashMessages = document.querySelectorAll('.alert');
-    
-    flashMessages.forEach(function(message) {
-        setTimeout(function() {
-            message.classList.add('opacity-0');
-            setTimeout(function() {
-                message.remove();
-            }, 300);
-        }, 5000);
-    });
-    
-    // Copy to clipboard function
-    const copyButtons = document.querySelectorAll('.copy-btn');
-    
-    copyButtons.forEach(function(button) {
-        button.addEventListener('click', function() {
-            const text = this.dataset.copyText;
-            navigator.clipboard.writeText(text).then(function() {
-                // Show success tooltip
-                button.setAttribute('title', 'Copiado!');
-                button.classList.add('bg-green-100', 'text-green-800');
-                button.classList.remove('bg-gray-100', 'text-gray-800');
-                
-                setTimeout(function() {
-                    button.setAttribute('title', 'Copiar');
-                    button.classList.remove('bg-green-100', 'text-green-800');
-                    button.classList.add('bg-gray-100', 'text-gray-800');
-                }, 2000);
-            });
-        });
-    });
-    
-    // Show password toggle
-    const passwordToggles = document.querySelectorAll('.password-toggle');
-    
-    passwordToggles.forEach(function(toggle) {
-        toggle.addEventListener('click', function() {
-            const passwordInput = document.getElementById(this.dataset.target);
-            
-            if (passwordInput.type === 'password') {
-                passwordInput.type = 'text';
-                toggle.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M3.707 2.293a1 1 0 00-1.414 1.414l14 14a1 1 0 001.414-1.414l-1.473-1.473A10.014 10.014 0 0019.542 10C18.268 5.943 14.478 3 10 3a9.958 9.958 0 00-4.512 1.074l-1.78-1.781zm4.261 4.26l1.514 1.515a2.003 2.003 0 012.45 2.45l1.514 1.514a4 4 0 00-5.478-5.478z" clip-rule="evenodd" /><path d="M12.454 16.697L9.75 13.992a4 4 0 01-3.742-3.741L2.335 6.578A9.98 9.98 0 00.458 10c1.274 4.057 5.065 7 9.542 7 .847 0 1.669-.105 2.454-.303z" /></svg>';
-            } else {
-                passwordInput.type = 'password';
-                toggle.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor"><path d="M10 12a2 2 0 100-4 2 2 0 000 4z" /><path fill-rule="evenodd" d="M.458 10C1.732 5.943 5.522 3 10 3s8.268 2.943 9.542 7c-1.274 4.057-5.064 7-9.542 7S1.732 14.057.458 10zM14 10a4 4 0 11-8 0 4 4 0 018 0z" clip-rule="evenodd" /></svg>';
-            }
-        });
-    });
-    
-    // Dropdown toggle
-    const dropdownToggles = document.querySelectorAll('.dropdown-toggle');
-    
-    dropdownToggles.forEach(function(toggle) {
-        toggle.addEventListener('click', function() {
-            const dropdown = document.getElementById(this.dataset.target);
-            dropdown.classList.toggle('hidden');
-        });
+    tabs.forEach(tab => {
+      tab.addEventListener('click', function() {
+        const target = this.getAttribute('data-tab');
         
-        // Close dropdown when clicking outside
-        document.addEventListener('click', function(event) {
-            if (!toggle.contains(event.target)) {
-                const dropdown = document.getElementById(toggle.dataset.target);
-                if (dropdown && !dropdown.classList.contains('hidden')) {
-                    dropdown.classList.add('hidden');
-                }
-            }
-        });
+        // Deactivate all tabs
+        tabs.forEach(t => t.classList.remove('active'));
+        panes.forEach(p => p.classList.remove('active'));
+        
+        // Activate clicked tab
+        this.classList.add('active');
+        group.querySelector(`.tab-pane[data-tab="${target}"]`).classList.add('active');
+      });
     });
-    
-    // Modal handling
-    const modalToggles = document.querySelectorAll('[data-modal-toggle]');
-    
-    modalToggles.forEach(function(toggle) {
-        toggle.addEventListener('click', function() {
-            const modal = document.getElementById(this.dataset.modalToggle);
-            modal.classList.toggle('hidden');
-        });
-    });
-    
-    // Close modal when clicking on backdrop
-    const modals = document.querySelectorAll('.modal');
-    
-    modals.forEach(function(modal) {
-        modal.addEventListener('click', function(event) {
-            if (event.target === modal) {
-                modal.classList.add('hidden');
-            }
-        });
-    });
-});
+  });
+}
+
+// Utility function to format dates
+function formatDate(dateString) {
+  const date = new Date(dateString);
+  return date.toLocaleDateString('pt-BR');
+}
+
+// Utility function to format CNPJs
+function formatCNPJ(cnpj) {
+  if (!cnpj) return '';
+  
+  // Remove non-digits
+  cnpj = cnpj.replace(/\D/g, '');
+  
+  // Apply CNPJ mask: XX.XXX.XXX/XXXX-XX
+  return cnpj.replace(/^(\d{2})(\d{3})(\d{3})(\d{4})(\d{2})/, '$1.$2.$3/$4-$5');
+}
+
+// Calculate days remaining until a date
+function daysUntil(dateString) {
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  
+  const targetDate = new Date(dateString);
+  targetDate.setHours(0, 0, 0, 0);
+  
+  const diffTime = targetDate - today;
+  const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+  
+  return diffDays;
+}
+
+// Copy text to clipboard
+function copyToClipboard(text) {
+  const textarea = document.createElement('textarea');
+  textarea.value = text;
+  document.body.appendChild(textarea);
+  textarea.select();
+  document.execCommand('copy');
+  document.body.removeChild(textarea);
+}
+
+// Show notification
+function showNotification(message, type = 'info') {
+  const notification = document.createElement('div');
+  notification.classList.add('notification', `notification-${type}`);
+  notification.textContent = message;
+  
+  document.body.appendChild(notification);
+  
+  setTimeout(() => {
+    notification.classList.add('show');
+  }, 10);
+  
+  setTimeout(() => {
+    notification.classList.remove('show');
+    setTimeout(() => {
+      document.body.removeChild(notification);
+    }, 300);
+  }, 3000);
+}

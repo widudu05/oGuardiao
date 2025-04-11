@@ -1,0 +1,63 @@
+{% extends 'base.html' %}
+
+{% block title %}Novo Grupo - O Guardião{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h1>Novo Grupo</h1>
+    <div>
+        <a href="{{ url_for('groups') }}" class="btn btn-secondary">
+            <i class="fas fa-arrow-left"></i> Voltar
+        </a>
+    </div>
+</div>
+
+<div class="card">
+    <div class="card-body">
+        <form method="POST" action="{{ url_for('create_group') }}">
+            {{ form.hidden_tag() }}
+            
+            <div class="form-group">
+                {{ form.name.label(class="form-label") }}
+                {{ form.name(class="form-control", placeholder="Nome do grupo") }}
+                {% if form.name.errors %}
+                    {% for error in form.name.errors %}
+                        <div class="form-text text-danger">{{ error }}</div>
+                    {% endfor %}
+                {% endif %}
+            </div>
+            
+            <div class="form-group">
+                {{ form.description.label(class="form-label") }}
+                {{ form.description(class="form-control", rows=3, placeholder="Descrição do grupo") }}
+                {% if form.description.errors %}
+                    {% for error in form.description.errors %}
+                        <div class="form-text text-danger">{{ error }}</div>
+                    {% endfor %}
+                {% endif %}
+            </div>
+            
+            <div class="form-group mt-4">
+                <button type="submit" class="btn btn-primary">Salvar Grupo</button>
+                <a href="{{ url_for('groups') }}" class="btn btn-secondary">Cancelar</a>
+            </div>
+        </form>
+    </div>
+</div>
+
+<div class="card mt-4">
+    <div class="card-header">
+        <h2 class="card-title">Dicas de Uso</h2>
+    </div>
+    <div class="card-body">
+        <p>Os grupos podem ser utilizados para organizar suas empresas de diversas maneiras:</p>
+        <ul>
+            <li>Agrupe por segmento de mercado (Varejo, Indústria, Serviços)</li>
+            <li>Agrupe por região geográfica</li>
+            <li>Agrupe por departamento ou responsável</li>
+            <li>Agrupe por tipo de certificado predominantemente utilizado</li>
+        </ul>
+        <p>Uma boa organização em grupos facilita a gestão e o controle dos certificados digitais.</p>
+    </div>
+</div>
+{% endblock %}

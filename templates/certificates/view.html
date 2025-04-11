@@ -1,0 +1,207 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ certificate.name }} - O Guardião{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h1>Certificado</h1>
+    <div>
+        <a href="{{ url_for('certificates') }}" class="btn btn-secondary">
+            <i class="fas fa-arrow-left"></i> Voltar
+        </a>
+    </div>
+</div>
+
+{% set days_left = (certificate.expiry_date - now.date()).days %}
+<div class="card mb-4 {% if days_left < 0 %}border-danger{% elif days_left <= 30 %}border-warning{% else %}border-success{% endif %}">
+    <div class="card-header d-flex justify-content-between align-items-center">
+        <h2 class="card-title">{{ certificate.name }}</h2>
+        <span class="badge {% if days_left < 0 %}badge-danger{% elif days_left <= 30 %}badge-warning{% else %}badge-success{% endif %}">
+            {% if days_left < 0 %}
+                Expirado
+            {% elif days_left <= 30 %}
+                Expira em {{ days_left }} dias
+            {% else %}
+                Válido
+            {% endif %}
+        </span>
+    </div>
+    <div class="card-body">
+        <div class="row">
+            <div class="col-md-6">
+                <p><strong>Tipo:</strong> {{ certificate.type }}</p>
+                <p><strong>Empresa:</strong> {{ certificate.company.name }}</p>
+                <p><strong>CNPJ:</strong> {{ certificate.company.cnpj }}</p>
+                <p><strong>Data de Emissão:</strong> {{ certificate.issue_date.strftime('%d/%m/%Y') }}</p>
+                <p><strong>Data de Validade:</strong> {{ certificate.expiry_date.strftime('%d/%m/%Y') }}</p>
+            </div>
+            <div class="col-md-6">
+                <p><strong>Arquivo:</strong> {{ certificate.file_name }}</p>
+                <p><strong>Criado por:</strong> {{ certificate.creator.name }}</p>
+                <p><strong>Data de Cadastro:</strong> {{ certificate.created_at.strftime('%d/%m/%Y %H:%M') }}</p>
+                <p><strong>Última Atualização:</strong> {{ certificate.updated_at.strftime('%d/%m/%Y %H:%M') }}</p>
+                <div class="certificate-password">
+                    <p><strong>Senha:</strong> 
+                        <input type="password" class="password-value" value="••••••••" readonly style="border: none; background: transparent;">
+                        <button type="button" class="btn btn-sm btn-secondary toggle-password">
+                            <i class="fas fa-eye"></i>
+                        </button>
+                        <button type="button" class="btn btn-sm btn-secondary copy-password">
+                            <i class="fas fa-copy"></i>
+                        </button>
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="card-footer">
+        <div class="d-flex justify-content-between">
+            <div>
+                <button type="button" class="btn btn-primary" onclick="downloadCertificate({{ certificate.id }}, '{{ certificate.name }}')">
+                    <i class="fas fa-download"></i> Baixar Certificado
+                </button>
+                
+                <button type="button" class="btn btn-secondary" onclick="requestCertificatePassword({{ certificate.id }})">
+                    <i class="fas fa-key"></i> Ver Senha
+                </button>
+            </div>
+            <div>
+                <form action="{{ url_for('delete_certificate', certificate_id=certificate.id) }}" method="POST" style="display: inline;">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                    <button type="submit" class="btn btn-danger" onclick="return confirm('Tem certeza que deseja excluir este certificado?');">
+                        <i class="fas fa-trash"></i> Excluir
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Countdown card for expiring certificates -->
+{% if days_left > 0 and days_left <= 90 %}
+<div class="card mb-4 {% if days_left <= 30 %}bg-warning text-white{% else %}bg-info text-white{% endif %}">
+    <div class="card-body">
+        <h3><i class="fas fa-exclamation-triangle"></i> Alerta de Expiração</h3>
+        <p class="mb-0">Este certificado expirará em <strong>{{ days_left }} dias</strong>. Recomendamos renovar com antecedência para evitar interrupções.</p>
+    </div>
+</div>
+{% endif %}
+
+<!-- Certificate timeline -->
+<div class="card">
+    <div class="card-header">
+        <h2 class="card-title">Linha do Tempo</h2>
+    </div>
+    <div class="card-body">
+        <ul class="timeline">
+            <li class="timeline-item">
+                <div class="timeline-marker bg-success"></div>
+                <div class="timeline-content">
+                    <h3 class="timeline-title">Emissão</h3>
+                    <p>{{ certificate.issue_date.strftime('%d/%m/%Y') }}</p>
+                </div>
+            </li>
+            
+            <li class="timeline-item">
+                <div class="timeline-marker {% if days_left <= 0 %}bg-danger{% elif days_left <= 30 %}bg-warning{% else %}bg-info{% endif %}"></div>
+                <div class="timeline-content">
+                    <h3 class="timeline-title">Hoje</h3>
+                    <p>{{ now.date().strftime('%d/%m/%Y') }}</p>
+                </div>
+            </li>
+            
+            <li class="timeline-item">
+                <div class="timeline-marker {% if days_left <= 0 %}bg-danger{% else %}bg-info{% endif %}"></div>
+                <div class="timeline-content">
+                    <h3 class="timeline-title">Expiração</h3>
+                    <p>{{ certificate.expiry_date.strftime('%d/%m/%Y') }}</p>
+                </div>
+            </li>
+        </ul>
+    </div>
+</div>
+
+<!-- Password modal -->
+<div id="password-modal" class="modal">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h2 class="modal-title">Senha do Certificado</h2>
+            <button type="button" class="modal-close" data-modal-close>&times;</button>
+        </div>
+        <div class="modal-body">
+            <div class="form-group">
+                <label for="certificate-password">Senha:</label>
+                <div class="input-group">
+                    <input type="text" id="certificate-password" class="form-control" readonly>
+                    <div class="input-group-append">
+                        <button type="button" class="btn btn-outline-secondary" onclick="copyPassword()">
+                            <i class="fas fa-copy"></i>
+                        </button>
+                    </div>
+                </div>
+                <div class="form-text">Para copiar a senha, clique no botão ao lado.</div>
+            </div>
+        </div>
+        <div class="modal-footer">
+            <button type="button" class="btn btn-primary" data-modal-close>Fechar</button>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script src="{{ url_for('static', filename='js/certificates.js') }}"></script>
+<script>
+    function copyPassword() {
+        var passwordField = document.getElementById('certificate-password');
+        passwordField.select();
+        document.execCommand('copy');
+        showNotification('Senha copiada para a área de transferência', 'success');
+    }
+</script>
+
+<style>
+    .timeline {
+        list-style: none;
+        padding: 0;
+        position: relative;
+    }
+    
+    .timeline:before {
+        content: '';
+        position: absolute;
+        top: 0;
+        bottom: 0;
+        width: 4px;
+        background: #e5e7eb;
+        left: 31px;
+        margin-left: -1.5px;
+    }
+    
+    .timeline-item {
+        margin-bottom: 50px;
+        position: relative;
+        display: flex;
+        align-items: center;
+    }
+    
+    .timeline-marker {
+        width: 16px;
+        height: 16px;
+        border-radius: 50%;
+        position: absolute;
+        left: 31px;
+        margin-left: -8px;
+        z-index: 1;
+    }
+    
+    .timeline-content {
+        margin-left: 50px;
+    }
+    
+    .timeline-title {
+        margin: 0;
+        font-size: 1.25rem;
+    }
+</style>
+{% endblock %}

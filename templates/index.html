@@ -1,166 +1,101 @@
-<!DOCTYPE html>
-<html lang="pt-BR">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>O Guardião - Gestão Segura de Certificados Digitais</title>
-    
-    <!-- Tailwind CSS -->
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/tailwind.css') }}">
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/custom.css') }}">
-    
-    <!-- Font Awesome for icons -->
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
-</head>
-<body class="bg-gray-100">
-    <!-- Header -->
-    <header class="bg-azul-profundo text-white">
-        <div class="container mx-auto px-6 py-4">
-            <div class="flex items-center justify-between">
-                <div class="flex items-center">
-                    <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8" viewBox="0 0 20 20" fill="currentColor">
-                        <path fill-rule="evenodd" d="M2.166 4.999A11.954 11.954 0 0010 1.944 11.954 11.954 0 0017.834 5c.11.65.166 1.32.166 2.001 0 5.225-3.34 9.67-8 11.317C5.34 16.67 2 12.225 2 7c0-.682.057-1.35.166-2.001zm11.541 3.708a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd" />
-                    </svg>
-                    <span class="ml-2 text-lg font-bold">O Guardião</span>
-                </div>
-                <div>
-                    <a href="{{ url_for('auth.login') }}" class="text-white hover:text-gray-200">Login</a>
-                    <a href="{{ url_for('auth.register') }}" class="ml-4 bg-white text-azul-profundo px-4 py-2 rounded-md hover:bg-gray-100">Registrar</a>
-                </div>
+{% extends 'base.html' %}
+
+{% block auth_content %}
+<div class="hero">
+    <div class="container">
+        <div class="d-flex align-items-center justify-content-between">
+            <div>
+                <img src="{{ url_for('static', filename='svg/logo.svg') }}" alt="O Guardião Logo" width="80">
+            </div>
+            <div>
+                <a href="{{ url_for('login') }}" class="btn btn-primary">Login</a>
+                <a href="{{ url_for('register') }}" class="btn btn-secondary ml-2">Registrar</a>
             </div>
         </div>
-    </header>
-    
-    <!-- Hero section -->
-    <section class="py-20 bg-azul-profundo text-white">
-        <div class="container mx-auto px-6">
-            <div class="flex flex-col md:flex-row items-center">
-                <div class="md:w-1/2 mb-10 md:mb-0">
-                    <h1 class="text-4xl md:text-5xl font-bold leading-tight mb-4">Gestão de Certificados Digitais Simplificada e Segura</h1>
-                    <p class="text-xl mb-8">O Guardião oferece uma plataforma completa para gerenciar seus certificados digitais com segurança, alertas automáticos e controle total.</p>
-                    <div class="flex flex-col sm:flex-row">
-                        <a href="{{ url_for('auth.register') }}" class="bg-white text-azul-profundo font-bold px-6 py-3 rounded-md hover:bg-gray-100 mb-4 sm:mb-0 sm:mr-4 text-center">Começar Agora</a>
-                        <a href="#features" class="border border-white text-white font-bold px-6 py-3 rounded-md hover:bg-white hover:bg-opacity-10 text-center">Saiba Mais</a>
-                    </div>
-                </div>
-                <div class="md:w-1/2 flex justify-center">
-                    <svg xmlns="http://www.w3.org/2000/svg" class="h-64 w-64" viewBox="0 0 20 20" fill="currentColor">
-                        <path fill-rule="evenodd" d="M2.166 4.999A11.954 11.954 0 0010 1.944 11.954 11.954 0 0017.834 5c.11.65.166 1.32.166 2.001 0 5.225-3.34 9.67-8 11.317C5.34 16.67 2 12.225 2 7c0-.682.057-1.35.166-2.001zm11.541 3.708a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd" />
-                    </svg>
-                </div>
-            </div>
+        
+        <div class="mt-5 text-center">
+            <h1 class="hero-title">O Guardião</h1>
+            <p class="hero-subtitle">A solução completa para gestão de certificados digitais</p>
+            <a href="{{ url_for('register') }}" class="btn btn-primary btn-lg mt-3">Comece Agora</a>
         </div>
-    </section>
-    
-    <!-- Features section -->
-    <section id="features" class="py-20">
-        <div class="container mx-auto px-6">
-            <h2 class="text-3xl font-bold text-center mb-16 text-azul-profundo">Recursos Principais</h2>
-            
-            <div class="grid grid-cols-1 md:grid-cols-3 gap-10">
-                <div class="bg-white rounded-lg shadow-md p-8 hover:shadow-lg transition duration-300">
-                    <div class="flex items-center justify-center h-16 w-16 bg-blue-100 text-azul-profundo rounded-full mb-6 mx-auto">
-                        <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
-                        </svg>
-                    </div>
-                    <h3 class="text-xl font-semibold text-center mb-3">Gestão Segura</h3>
-                    <p class="text-gray-600 text-center">Armazenamento seguro de certificados e-CPF e e-CNPJ com criptografia AES-256 e controle de acesso rigoroso.</p>
+    </div>
+</div>
+
+<div class="features">
+    <div class="container">
+        <h2 class="text-center mb-5" style="color: #1E3A8A; font-size: 2rem;">Recursos Principais</h2>
+        
+        <div class="features-grid">
+            <div class="feature-card">
+                <div class="feature-icon">
+                    <i class="fas fa-shield-alt"></i>
                 </div>
-                
-                <div class="bg-white rounded-lg shadow-md p-8 hover:shadow-lg transition duration-300">
-                    <div class="flex items-center justify-center h-16 w-16 bg-blue-100 text-azul-profundo rounded-full mb-6 mx-auto">
-                        <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-                        </svg>
-                    </div>
-                    <h3 class="text-xl font-semibold text-center mb-3">Alertas Automáticos</h3>
-                    <p class="text-gray-600 text-center">Receba alertas de vencimento com 30, 15 e 5 dias de antecedência. Nunca mais seja pego de surpresa.</p>
-                </div>
-                
-                <div class="bg-white rounded-lg shadow-md p-8 hover:shadow-lg transition duration-300">
-                    <div class="flex items-center justify-center h-16 w-16 bg-blue-100 text-azul-profundo rounded-full mb-6 mx-auto">
-                        <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
-                        </svg>
-                    </div>
-                    <h3 class="text-xl font-semibold text-center mb-3">Gestão de Usuários</h3>
-                    <p class="text-gray-600 text-center">Controle de acesso por perfil, convites por e-mail e histórico de ações para auditoria completa.</p>
-                </div>
+                <h3 class="feature-title">Segurança Total</h3>
+                <p class="feature-description">Seus certificados armazenados com criptografia AES-256 e proteção de senhas.</p>
             </div>
             
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-10 mt-10">
-                <div class="bg-white rounded-lg shadow-md p-8 hover:shadow-lg transition duration-300">
-                    <div class="flex items-center justify-center h-16 w-16 bg-blue-100 text-azul-profundo rounded-full mb-6 mx-auto">
-                        <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                        </svg>
-                    </div>
-                    <h3 class="text-xl font-semibold text-center mb-3">Relatórios e Exportação</h3>
-                    <p class="text-gray-600 text-center">Relatórios detalhados sobre seus certificados, empresas e vencimentos com exportação facilitada.</p>
+            <div class="feature-card">
+                <div class="feature-icon">
+                    <i class="fas fa-bell"></i>
                 </div>
-                
-                <div class="bg-white rounded-lg shadow-md p-8 hover:shadow-lg transition duration-300">
-                    <div class="flex items-center justify-center h-16 w-16 bg-blue-100 text-azul-profundo rounded-full mb-6 mx-auto">
-                        <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
-                        </svg>
-                    </div>
-                    <h3 class="text-xl font-semibold text-center mb-3">Segurança Avançada</h3>
-                    <p class="text-gray-600 text-center">Autenticação multifator (MFA), logs detalhados de auditoria e proteção contra vazamentos de dados.</p>
+                <h3 class="feature-title">Alertas de Vencimento</h3>
+                <p class="feature-description">Notificações automáticas em 30, 15 e 5 dias antes da expiração.</p>
+            </div>
+            
+            <div class="feature-card">
+                <div class="feature-icon">
+                    <i class="fas fa-users"></i>
                 </div>
+                <h3 class="feature-title">Gestão de Usuários</h3>
+                <p class="feature-description">Controle de acesso com múltiplos níveis e convites por e-mail.</p>
+            </div>
+            
+            <div class="feature-card">
+                <div class="feature-icon">
+                    <i class="fas fa-building"></i>
+                </div>
+                <h3 class="feature-title">Empresas e Grupos</h3>
+                <p class="feature-description">Organização hierárquica de empresas por grupos para facilitar a gestão.</p>
+            </div>
+            
+            <div class="feature-card">
+                <div class="feature-icon">
+                    <i class="fas fa-chart-line"></i>
+                </div>
+                <h3 class="feature-title">Dashboard Intuitivo</h3>
+                <p class="feature-description">Visualização clara e organizada de todos os certificados e status.</p>
+            </div>
+            
+            <div class="feature-card">
+                <div class="feature-icon">
+                    <i class="fas fa-history"></i>
+                </div>
+                <h3 class="feature-title">Auditoria Completa</h3>
+                <p class="feature-description">Registro detalhado de todas as ações para máxima segurança.</p>
             </div>
         </div>
-    </section>
-    
-    <!-- CTA section -->
-    <section class="py-20 bg-azul-claro text-white">
-        <div class="container mx-auto px-6 text-center">
-            <h2 class="text-3xl font-bold mb-6">Pronto para começar?</h2>
-            <p class="text-xl mb-10 max-w-3xl mx-auto">Registre-se agora e comece a gerenciar seus certificados digitais de forma segura e eficiente.</p>
-            <a href="{{ url_for('auth.register') }}" class="bg-white text-azul-profundo font-bold px-8 py-4 rounded-md hover:bg-gray-100 inline-block">Criar Conta Grátis</a>
+    </div>
+</div>
+
+<div class="cta">
+    <div class="container">
+        <h2 class="cta-title">Pronto para começar?</h2>
+        <p class="cta-description">Registre-se agora e deixe O Guardião cuidar de seus certificados digitais</p>
+        <a href="{{ url_for('register') }}" class="btn btn-primary btn-lg">Criar Conta</a>
+    </div>
+</div>
+
+<footer class="mt-5 py-4" style="background-color: #1E3A8A; color: white;">
+    <div class="container text-center">
+        <div class="mb-3">
+            <img src="{{ url_for('static', filename='svg/logo.svg') }}" alt="O Guardião Logo" width="60">
         </div>
-    </section>
-    
-    <!-- Footer -->
-    <footer class="bg-white py-12">
-        <div class="container mx-auto px-6">
-            <div class="flex flex-col md:flex-row justify-between items-center">
-                <div class="mb-6 md:mb-0">
-                    <div class="flex items-center">
-                        <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8 text-azul-profundo" viewBox="0 0 20 20" fill="currentColor">
-                            <path fill-rule="evenodd" d="M2.166 4.999A11.954 11.954 0 0010 1.944 11.954 11.954 0 0017.834 5c.11.65.166 1.32.166 2.001 0 5.225-3.34 9.67-8 11.317C5.34 16.67 2 12.225 2 7c0-.682.057-1.35.166-2.001zm11.541 3.708a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd" />
-                        </svg>
-                        <span class="ml-2 text-lg font-bold text-azul-profundo">O Guardião</span>
-                    </div>
-                    <p class="text-gray-600 mt-2">Segurança e simplicidade para seus certificados digitais.</p>
-                </div>
-                <div class="flex flex-col md:flex-row space-y-4 md:space-y-0 md:space-x-10">
-                    <div>
-                        <h3 class="text-gray-800 font-semibold mb-3">Empresa</h3>
-                        <ul class="space-y-2">
-                            <li><a href="#" class="text-gray-600 hover:text-azul-profundo">Sobre</a></li>
-                            <li><a href="#" class="text-gray-600 hover:text-azul-profundo">Contato</a></li>
-                            <li><a href="#" class="text-gray-600 hover:text-azul-profundo">Blog</a></li>
-                        </ul>
-                    </div>
-                    <div>
-                        <h3 class="text-gray-800 font-semibold mb-3">Legal</h3>
-                        <ul class="space-y-2">
-                            <li><a href="#" class="text-gray-600 hover:text-azul-profundo">Termos de Uso</a></li>
-                            <li><a href="#" class="text-gray-600 hover:text-azul-profundo">Privacidade</a></li>
-                            <li><a href="#" class="text-gray-600 hover:text-azul-profundo">Cookies</a></li>
-                        </ul>
-                    </div>
-                </div>
-            </div>
-            <div class="border-t border-gray-200 mt-10 pt-6 text-center">
-                <p class="text-gray-600">&copy; 2023 O Guardião. Todos os direitos reservados.</p>
-            </div>
+        <p>&copy; 2023 O Guardião - Todos os direitos reservados</p>
+        <div class="mt-2">
+            <a href="#" style="color: white; margin: 0 10px;">Termos de Uso</a>
+            <a href="#" style="color: white; margin: 0 10px;">Política de Privacidade</a>
+            <a href="#" style="color: white; margin: 0 10px;">Contato</a>
         </div>
-    </footer>
-    
-    <!-- JavaScript -->
-    <script src="{{ url_for('static', filename='js/main.js') }}"></script>
-</body>
-</html>
+    </div>
+</footer>
+{% endblock %}

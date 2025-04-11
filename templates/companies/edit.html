@@ -1,0 +1,173 @@
+{% extends 'base.html' %}
+
+{% block title %}Editar {{ company.name }} - O Guardião{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h1>Editar Empresa</h1>
+    <div>
+        <a href="{{ url_for('companies') }}" class="btn btn-secondary">
+            <i class="fas fa-arrow-left"></i> Voltar
+        </a>
+    </div>
+</div>
+
+<div class="card">
+    <div class="card-body">
+        <form method="POST" action="{{ url_for('edit_company', company_id=company.id) }}">
+            {{ form.hidden_tag() }}
+            
+            <div class="form-group">
+                {{ form.name.label(class="form-label") }}
+                {{ form.name(class="form-control") }}
+                {% if form.name.errors %}
+                    {% for error in form.name.errors %}
+                        <div class="form-text text-danger">{{ error }}</div>
+                    {% endfor %}
+                {% endif %}
+            </div>
+            
+            <div class="form-group">
+                {{ form.trade_name.label(class="form-label") }}
+                {{ form.trade_name(class="form-control") }}
+                {% if form.trade_name.errors %}
+                    {% for error in form.trade_name.errors %}
+                        <div class="form-text text-danger">{{ error }}</div>
+                    {% endfor %}
+                {% endif %}
+            </div>
+            
+            <div class="form-group">
+                {{ form.cnpj.label(class="form-label") }}
+                {{ form.cnpj(class="form-control", data_mask="cnpj") }}
+                {% if form.cnpj.errors %}
+                    {% for error in form.cnpj.errors %}
+                        <div class="form-text text-danger">{{ error }}</div>
+                    {% endfor %}
+                {% endif %}
+            </div>
+            
+            <div class="form-group">
+                <div class="d-flex justify-content-between align-items-center">
+                    {{ form.group_id.label(class="form-label") }}
+                    <button type="button" id="create-new-group" class="btn btn-sm btn-primary">
+                        <i class="fas fa-plus"></i> Criar Novo Grupo
+                    </button>
+                </div>
+                {{ form.group_id(class="form-control") }}
+                {% if form.group_id.errors %}
+                    {% for error in form.group_id.errors %}
+                        <div class="form-text text-danger">{{ error }}</div>
+                    {% endfor %}
+                {% endif %}
+            </div>
+            
+            <!-- New group form (hidden by default) -->
+            <div id="new-group-form" class="card mt-3 mb-3" style="display: none;">
+                <div class="card-header">
+                    <h3 class="card-title">Novo Grupo</h3>
+                </div>
+                <div class="card-body">
+                    <div class="form-group">
+                        <label for="new_group_name" class="form-label">Nome do Grupo</label>
+                        <input type="text" id="new_group_name" class="form-control" placeholder="Nome do grupo">
+                    </div>
+                    <div class="form-group">
+                        <label for="new_group_description" class="form-label">Descrição</label>
+                        <textarea id="new_group_description" class="form-control" rows="3" placeholder="Descrição do grupo"></textarea>
+                    </div>
+                    <button type="button" id="submit-new-group" class="btn btn-primary">Salvar Grupo</button>
+                </div>
+            </div>
+            
+            <div class="form-group mt-4">
+                <button type="submit" class="btn btn-primary">Salvar Alterações</button>
+                <a href="{{ url_for('companies') }}" class="btn btn-secondary">Cancelar</a>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Certificates -->
+<div class="card mt-4">
+    <div class="card-header d-flex justify-content-between align-items-center">
+        <h2 class="card-title">Certificados da Empresa</h2>
+        <a href="{{ url_for('upload_certificate') }}" class="btn btn-primary">
+            <i class="fas fa-plus"></i> Novo Certificado
+        </a>
+    </div>
+    <div class="card-body">
+        <div class="table-responsive">
+            <table class="table table-hover">
+                <thead>
+                    <tr>
+                        <th>Nome</th>
+                        <th>Tipo</th>
+                        <th>Data de Emissão</th>
+                        <th>Data de Validade</th>
+                        <th>Status</th>
+                        <th>Ações</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for cert in certificates %}
+                        {% set days_left = (cert.expiry_date - now.date()).days %}
+                        <tr>
+                            <td>{{ cert.name }}</td>
+                            <td>{{ cert.type }}</td>
+                            <td>{{ cert.issue_date.strftime('%d/%m/%Y') }}</td>
+                            <td>{{ cert.expiry_date.strftime('%d/%m/%Y') }}</td>
+                            <td>
+                                {% if days_left < 0 %}
+                                    <span class="badge badge-danger">Expirado</span>
+                                {% elif days_left <= 30 %}
+                                    <span class="badge badge-warning">Expira em {{ days_left }} dias</span>
+                                {% else %}
+                                    <span class="badge badge-success">Válido</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                <a href="{{ url_for('view_certificate', certificate_id=cert.id) }}" class="btn btn-sm btn-primary">
+                                    <i class="fas fa-eye"></i>
+                                </a>
+                            </td>
+                        </tr>
+                    {% else %}
+                        <tr>
+                            <td colspan="6" class="text-center">Nenhum certificado cadastrado para esta empresa.</td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<!-- Delete company -->
+<div class="card mt-4 border-danger">
+    <div class="card-header bg-danger text-white">
+        <h3 class="card-title">Zona de Perigo</h3>
+    </div>
+    <div class="card-body">
+        <h4>Excluir Empresa</h4>
+        <p>Esta ação não poderá ser desfeita. Todos os certificados associados a esta empresa serão perdidos.</p>
+        <form action="{{ url_for('delete_company', company_id=company.id) }}" method="POST" id="delete-company-form">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+            <button type="button" class="btn btn-danger" onclick="confirmDelete()">
+                <i class="fas fa-trash"></i> Excluir Empresa
+            </button>
+        </form>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script src="{{ url_for('static', filename='js/companies.js') }}"></script>
+<script>
+    function confirmDelete() {
+        if (confirm('Tem certeza que deseja excluir esta empresa? Esta ação não pode ser desfeita.')) {
+            document.getElementById('delete-company-form').submit();
+        }
+    }
+</script>
+{% endblock %}

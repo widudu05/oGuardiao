@@ -1,0 +1,174 @@
+{% extends 'base.html' %}
+
+{% block title %}Logs de Auditoria - O Guardião{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h1>Logs de Auditoria</h1>
+    <div>
+        <a href="{{ url_for('dashboard') }}" class="btn btn-secondary">
+            <i class="fas fa-arrow-left"></i> Voltar
+        </a>
+    </div>
+</div>
+
+<!-- Filter section -->
+<div class="filter-section">
+    <form id="audit-filters" method="GET" action="{{ url_for('audit_logs') }}">
+        <div class="filter-form">
+            <div class="filter-group">
+                <label for="user_id" class="form-label">Usuário</label>
+                <select id="user_id" name="user_id" class="form-control">
+                    <option value="">Todos os usuários</option>
+                    {% for user in users %}
+                        <option value="{{ user.id }}" {% if user_id == user.id %}selected{% endif %}>
+                            {{ user.name }}
+                        </option>
+                    {% endfor %}
+                </select>
+            </div>
+            
+            <div class="filter-group">
+                <label for="action" class="form-label">Ação</label>
+                <select id="action" name="action" class="form-control">
+                    <option value="">Todas as ações</option>
+                    {% for action_item in actions %}
+                        <option value="{{ action_item }}" {% if action == action_item %}selected{% endif %}>
+                            {{ action_item }}
+                        </option>
+                    {% endfor %}
+                </select>
+            </div>
+            
+            <div class="filter-group">
+                <label for="start_date" class="form-label">Data Inicial</label>
+                <input type="date" id="start_date" name="start_date" class="form-control" value="{{ start_date or '' }}">
+            </div>
+            
+            <div class="filter-group">
+                <label for="end_date" class="form-label">Data Final</label>
+                <input type="date" id="end_date" name="end_date" class="form-control" value="{{ end_date or '' }}">
+            </div>
+            
+            <div class="filter-buttons">
+                <button type="submit" class="btn btn-primary">Filtrar</button>
+                <button type="button" class="btn btn-secondary reset-filters">Limpar</button>
+            </div>
+        </div>
+    </form>
+</div>
+
+<!-- Audit logs table -->
+<div class="card">
+    <div class="card-body">
+        {% if logs.items|length > 0 %}
+            <div class="table-responsive">
+                <table class="table table-hover">
+                    <thead>
+                        <tr>
+                            <th>Data</th>
+                            <th>Usuário</th>
+                            <th>Ação</th>
+                            <th>Detalhes</th>
+                            <th>IP</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for log in logs.items %}
+                            <tr>
+                                <td>{{ log.created_at.strftime('%d/%m/%Y %H:%M:%S') }}</td>
+                                <td>{{ log.user.name }}</td>
+                                <td>{{ log.action }}</td>
+                                <td>{{ log.details or '-' }}</td>
+                                <td>{{ log.ip_address or '-' }}</td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            
+            <!-- Pagination -->
+            <div class="mt-4">
+                <nav aria-label="Navegação de páginas">
+                    <ul class="pagination justify-content-center">
+                        {% if logs.has_prev %}
+                            <li class="page-item">
+                                <a class="page-link" href="{{ url_for('audit_logs', page=logs.prev_num, user_id=user_id, action=action, start_date=start_date, end_date=end_date) }}">Anterior</a>
+                            </li>
+                        {% else %}
+                            <li class="page-item disabled">
+                                <span class="page-link">Anterior</span>
+                            </li>
+                        {% endif %}
+                        
+                        {% for page_num in logs.iter_pages(left_edge=1, right_edge=1, left_current=2, right_current=2) %}
+                            {% if page_num %}
+                                {% if page_num == logs.page %}
+                                    <li class="page-item active">
+                                        <span class="page-link">{{ page_num }}</span>
+                                    </li>
+                                {% else %}
+                                    <li class="page-item">
+                                        <a class="page-link" href="{{ url_for('audit_logs', page=page_num, user_id=user_id, action=action, start_date=start_date, end_date=end_date) }}">{{ page_num }}</a>
+                                    </li>
+                                {% endif %}
+                            {% else %}
+                                <li class="page-item disabled">
+                                    <span class="page-link">...</span>
+                                </li>
+                            {% endif %}
+                        {% endfor %}
+                        
+                        {% if logs.has_next %}
+                            <li class="page-item">
+                                <a class="page-link" href="{{ url_for('audit_logs', page=logs.next_num, user_id=user_id, action=action, start_date=start_date, end_date=end_date) }}">Próxima</a>
+                            </li>
+                        {% else %}
+                            <li class="page-item disabled">
+                                <span class="page-link">Próxima</span>
+                            </li>
+                        {% endif %}
+                    </ul>
+                </nav>
+            </div>
+        {% else %}
+            <div class="alert alert-info">
+                Nenhum log de auditoria encontrado com os filtros selecionados.
+            </div>
+        {% endif %}
+    </div>
+</div>
+
+<!-- Export button -->
+<div class="d-flex justify-content-end mt-3">
+    <a href="{{ url_for('export_audit_logs', user_id=user_id, action=action, start_date=start_date, end_date=end_date) }}" class="btn btn-primary">
+        <i class="fas fa-download"></i> Exportar Logs
+    </a>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Handle reset filters button
+    const resetButton = document.querySelector('.reset-filters');
+    if (resetButton) {
+        resetButton.addEventListener('click', function() {
+            const form = document.getElementById('audit-filters');
+            const selects = form.querySelectorAll('select');
+            const inputs = form.querySelectorAll('input[type="date"]');
+            
+            selects.forEach(select => {
+                select.value = '';
+            });
+            
+            inputs.forEach(input => {
+                input.value = '';
+            });
+            
+            form.submit();
+        });
+    }
+});
+</script>
+{% endblock %}

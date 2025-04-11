@@ -1,0 +1,124 @@
+{% extends 'base.html' %}
+
+{% block title %}Novo Certificado - O Guardião{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h1>Novo Certificado</h1>
+    <div>
+        <a href="{{ url_for('certificates') }}" class="btn btn-secondary">
+            <i class="fas fa-arrow-left"></i> Voltar
+        </a>
+    </div>
+</div>
+
+<div class="card">
+    <div class="card-body">
+        <form method="POST" action="{{ url_for('upload_certificate') }}" enctype="multipart/form-data">
+            {{ form.hidden_tag() }}
+            
+            <div class="form-group">
+                {{ form.name.label(class="form-label") }}
+                {{ form.name(class="form-control") }}
+                {% if form.name.errors %}
+                    {% for error in form.name.errors %}
+                        <div class="form-text text-danger">{{ error }}</div>
+                    {% endfor %}
+                {% endif %}
+            </div>
+            
+            <div class="form-group">
+                {{ form.type.label(class="form-label") }}
+                {{ form.type(class="form-control") }}
+                {% if form.type.errors %}
+                    {% for error in form.type.errors %}
+                        <div class="form-text text-danger">{{ error }}</div>
+                    {% endfor %}
+                {% endif %}
+            </div>
+            
+            <div class="form-group">
+                {{ form.company_id.label(class="form-label") }}
+                {{ form.company_id(class="form-control") }}
+                {% if form.company_id.errors %}
+                    {% for error in form.company_id.errors %}
+                        <div class="form-text text-danger">{{ error }}</div>
+                    {% endfor %}
+                {% endif %}
+            </div>
+            
+            <div class="form-group">
+                {{ form.certificate_file.label(class="form-label") }}
+                <div class="custom-file">
+                    {{ form.certificate_file(class="custom-file-input", id="certificate_file") }}
+                    <label class="custom-file-label" for="certificate_file">Escolher arquivo</label>
+                </div>
+                <div id="selected-filename" class="form-text" style="display: none;"></div>
+                <div id="file-error" class="form-text text-danger" style="display: none;"></div>
+                {% if form.certificate_file.errors %}
+                    {% for error in form.certificate_file.errors %}
+                        <div class="form-text text-danger">{{ error }}</div>
+                    {% endfor %}
+                {% endif %}
+                <div class="form-text">Apenas arquivos .pfx ou .p12 são permitidos. Tamanho máximo: 5MB.</div>
+            </div>
+            
+            <div class="form-group">
+                {{ form.password.label(class="form-label") }}
+                <div class="input-group">
+                    {{ form.password(class="form-control") }}
+                    <div class="input-group-append">
+                        <button type="button" class="btn btn-outline-secondary password-toggle">
+                            <i class="fas fa-eye"></i>
+                        </button>
+                    </div>
+                </div>
+                {% if form.password.errors %}
+                    {% for error in form.password.errors %}
+                        <div class="form-text text-danger">{{ error }}</div>
+                    {% endfor %}
+                {% endif %}
+                <div class="form-text">A senha será armazenada de forma criptografada.</div>
+            </div>
+            
+            <div class="row">
+                <div class="col-md-6">
+                    <div class="form-group">
+                        {{ form.issue_date.label(class="form-label") }}
+                        {{ form.issue_date(class="form-control", type="date") }}
+                        {% if form.issue_date.errors %}
+                            {% for error in form.issue_date.errors %}
+                                <div class="form-text text-danger">{{ error }}</div>
+                            {% endfor %}
+                        {% endif %}
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="form-group">
+                        {{ form.expiry_date.label(class="form-label") }}
+                        {{ form.expiry_date(class="form-control", type="date") }}
+                        {% if form.expiry_date.errors %}
+                            {% for error in form.expiry_date.errors %}
+                                <div class="form-text text-danger">{{ error }}</div>
+                            {% endfor %}
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+            
+            <div class="alert alert-info">
+                <i class="fas fa-info-circle"></i> O certificado será armazenado de forma segura e criptografada. Apenas usuários autorizados poderão acessá-lo.
+            </div>
+            
+            <div class="form-group mt-4">
+                <button type="submit" class="btn btn-primary">Enviar Certificado</button>
+                <a href="{{ url_for('certificates') }}" class="btn btn-secondary">Cancelar</a>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script src="{{ url_for('static', filename='js/certificates.js') }}"></script>
+{% endblock %}

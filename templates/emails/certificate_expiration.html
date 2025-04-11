@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Alerta de Vencimento de Certificado</title>
+    <style>
+        body {
+            font-family: 'Arial', sans-serif;
+            line-height: 1.6;
+            color: #374151;
+            margin: 0;
+            padding: 0;
+        }
+        .email-container {
+            max-width: 600px;
+            margin: 0 auto;
+        }
+        .email-header {
+            background-color: #EF4444;
+            color: #FFFFFF;
+            padding: 20px;
+            text-align: center;
+        }
+        .email-body {
+            background-color: #FFFFFF;
+            padding: 20px;
+            border-radius: 0 0 5px 5px;
+        }
+        .email-footer {
+            text-align: center;
+            padding: 15px;
+            font-size: 12px;
+            color: #6B7280;
+        }
+        .button {
+            display: inline-block;
+            background-color: #3B82F6;
+            color: #FFFFFF;
+            padding: 12px 24px;
+            text-decoration: none;
+            border-radius: 5px;
+            font-weight: bold;
+            margin: 20px 0;
+        }
+        .logo {
+            width: 80px;
+            height: auto;
+        }
+        .alert-box {
+            background-color: #FEF2F2;
+            border-left: 4px solid #EF4444;
+            padding: 15px;
+            margin: 20px 0;
+        }
+        .certificate-info {
+            background-color: #F3F4F6;
+            padding: 15px;
+            border-radius: 5px;
+            margin: 20px 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="email-container">
+        <div class="email-header">
+            <img src="cid:logo" alt="O Guardião Logo" class="logo">
+            <h1>ALERTA DE VENCIMENTO</h1>
+        </div>
+        
+        <div class="email-body">
+            <div class="alert-box">
+                <h2>Certificado Digital Expirando</h2>
+                <p>O certificado <strong>{{ certificate.name }}</strong> irá expirar em <strong>{{ days_left }} dias</strong>.</p>
+            </div>
+            
+            <div class="certificate-info">
+                <h3>Informações do Certificado</h3>
+                <p><strong>Nome:</strong> {{ certificate.name }}</p>
+                <p><strong>Tipo:</strong> {{ certificate.type }}</p>
+                <p><strong>Empresa:</strong> {{ certificate.company.name }}</p>
+                <p><strong>CNPJ:</strong> {{ certificate.company.cnpj }}</p>
+                <p><strong>Data de Emissão:</strong> {{ certificate.issue_date.strftime('%d/%m/%Y') }}</p>
+                <p><strong>Data de Validade:</strong> {{ certificate.expiry_date.strftime('%d/%m/%Y') }}</p>
+            </div>
+            
+            <p>Recomendamos que você tome as providências necessárias para renovar este certificado o mais breve possível, para evitar interrupções em operações que dependem dele.</p>
+            
+            <div style="text-align: center;">
+                <a href="{{ url_for('view_certificate', certificate_id=certificate.id, _external=True) }}" class="button">Ver Certificado</a>
+            </div>
+            
+            <p>Atenciosamente,<br>Equipe O Guardião</p>
+        </div>
+        
+        <div class="email-footer">
+            <p>&copy; 2023 O Guardião - Todos os direitos reservados</p>
+            <p>Este é um email automático, por favor não responda.</p>
+        </div>
+    </div>
+</body>
+</html>

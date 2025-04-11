@@ -1,0 +1,130 @@
+{% extends 'base.html' %}
+
+{% block title %}Meu Perfil - O Guardião{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h1>Meu Perfil</h1>
+</div>
+
+<div class="row">
+    <div class="col-md-8">
+        <div class="card">
+            <div class="card-header">
+                <h2 class="card-title">Informações Pessoais</h2>
+            </div>
+            <div class="card-body">
+                <form method="POST" action="{{ url_for('profile') }}">
+                    {{ form.hidden_tag() }}
+                    
+                    <div class="form-group">
+                        {{ form.name.label(class="form-label") }}
+                        {{ form.name(class="form-control") }}
+                        {% if form.name.errors %}
+                            {% for error in form.name.errors %}
+                                <div class="form-text text-danger">{{ error }}</div>
+                            {% endfor %}
+                        {% endif %}
+                    </div>
+                    
+                    <div class="form-group">
+                        <label class="form-label">Email</label>
+                        <input type="email" class="form-control" value="{{ current_user.email }}" disabled>
+                        <div class="form-text">O email não pode ser alterado.</div>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label class="form-label">Função</label>
+                        <input type="text" class="form-control" value="{% if current_user.role == 'master_admin' %}Administrador Principal{% elif current_user.role == 'admin' %}Administrador{% else %}Operador{% endif %}" disabled>
+                    </div>
+                    
+                    <hr>
+                    
+                    <h4>Alterar Senha</h4>
+                    <div class="form-group">
+                        {{ form.current_password.label(class="form-label") }}
+                        {{ form.current_password(class="form-control") }}
+                        {% if form.current_password.errors %}
+                            {% for error in form.current_password.errors %}
+                                <div class="form-text text-danger">{{ error }}</div>
+                            {% endfor %}
+                        {% endif %}
+                    </div>
+                    
+                    <div class="form-group">
+                        {{ form.new_password.label(class="form-label") }}
+                        {{ form.new_password(class="form-control") }}
+                        {% if form.new_password.errors %}
+                            {% for error in form.new_password.errors %}
+                                <div class="form-text text-danger">{{ error }}</div>
+                            {% endfor %}
+                        {% endif %}
+                        <div class="form-text">Deixe em branco para manter a senha atual.</div>
+                    </div>
+                    
+                    <div class="form-group">
+                        {{ form.confirm_password.label(class="form-label") }}
+                        {{ form.confirm_password(class="form-control") }}
+                        {% if form.confirm_password.errors %}
+                            {% for error in form.confirm_password.errors %}
+                                <div class="form-text text-danger">{{ error }}</div>
+                            {% endfor %}
+                        {% endif %}
+                    </div>
+                    
+                    <button type="submit" class="btn btn-primary">Salvar Alterações</button>
+                </form>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-4">
+        <div class="card mb-4">
+            <div class="card-header">
+                <h2 class="card-title">Segurança</h2>
+            </div>
+            <div class="card-body">
+                <h5>Autenticação de Dois Fatores</h5>
+                
+                {% if mfa_enabled %}
+                    <div class="alert alert-success">
+                        <i class="fas fa-check-circle"></i> MFA está ativado para sua conta.
+                    </div>
+                    
+                    <form method="POST" action="{{ url_for('mfa_disable') }}">
+                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                        <div class="form-group">
+                            <label for="password">Confirme sua senha para desativar:</label>
+                            <input type="password" id="password" name="password" class="form-control" required>
+                        </div>
+                        <button type="submit" class="btn btn-danger">Desativar MFA</button>
+                    </form>
+                {% else %}
+                    <div class="alert alert-warning">
+                        <i class="fas fa-exclamation-triangle"></i> MFA não está ativado para sua conta.
+                    </div>
+                    <p>A autenticação de dois fatores adiciona uma camada extra de segurança à sua conta.</p>
+                    <a href="{{ url_for('mfa_setup') }}" class="btn btn-primary">Configurar MFA</a>
+                {% endif %}
+            </div>
+        </div>
+        
+        <div class="card">
+            <div class="card-header">
+                <h2 class="card-title">Estatísticas</h2>
+            </div>
+            <div class="card-body">
+                <p><strong>Último login:</strong> 
+                    {% if current_user.last_login %}
+                        {{ current_user.last_login.strftime('%d/%m/%Y %H:%M') }}
+                    {% else %}
+                        Nunca
+                    {% endif %}
+                </p>
+                <p><strong>Membro desde:</strong> {{ current_user.created_at.strftime('%d/%m/%Y') }}</p>
+                <p><strong>Organização:</strong> {{ current_user.organization.name }}</p>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

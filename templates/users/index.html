@@ -1,0 +1,151 @@
+{% extends 'base.html' %}
+
+{% block title %}Usuários - O Guardião{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h1>Usuários</h1>
+    <div>
+        <a href="{{ url_for('invite_user') }}" class="btn btn-primary">
+            <i class="fas fa-user-plus"></i> Convidar Usuário
+        </a>
+    </div>
+</div>
+
+<div class="card">
+    <div class="card-body">
+        {% if users|length > 0 %}
+            <div class="table-responsive">
+                <table class="table table-hover">
+                    <thead>
+                        <tr>
+                            <th>Nome</th>
+                            <th>Email</th>
+                            <th>Função</th>
+                            <th>Último Login</th>
+                            <th>MFA</th>
+                            <th>Status</th>
+                            <th>Ações</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for user in users %}
+                            <tr>
+                                <td>{{ user.name }}</td>
+                                <td>{{ user.email }}</td>
+                                <td>
+                                    {% if user.role == 'master_admin' %}
+                                        <span class="badge badge-primary">Administrador Principal</span>
+                                    {% elif user.role == 'admin' %}
+                                        <span class="badge badge-info">Administrador</span>
+                                    {% else %}
+                                        <span class="badge badge-secondary">Operador</span>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    {% if user.last_login %}
+                                        {{ user.last_login.strftime('%d/%m/%Y %H:%M') }}
+                                    {% else %}
+                                        Nunca
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    {% if user.mfa_enabled %}
+                                        <span class="badge badge-success">Ativado</span>
+                                    {% else %}
+                                        <span class="badge badge-warning">Desativado</span>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    {% if user.last_active and (now - user.last_active).total_seconds() < 3600 %}
+                                        <span class="badge badge-success">Online</span>
+                                    {% else %}
+                                        <span class="badge badge-secondary">Offline</span>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    {% if current_user.id != user.id and (current_user.role == 'master_admin' or (current_user.role == 'admin' and user.role == 'operator')) %}
+                                        <form action="{{ url_for('delete_user', user_id=user.id) }}" method="POST" style="display: inline;">
+                                            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                            <button type="submit" class="btn btn-danger btn-sm" onclick="return confirm('Tem certeza que deseja remover este usuário?');">
+                                                <i class="fas fa-trash"></i>
+                                            </button>
+                                        </form>
+                                    {% endif %}
+                                </td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        {% else %}
+            <div class="alert alert-info">
+                Nenhum usuário encontrado. <a href="{{ url_for('invite_user') }}">Convide um novo usuário</a>.
+            </div>
+        {% endif %}
+    </div>
+</div>
+
+<!-- Pending invitations -->
+{% if invites|length > 0 %}
+<div class="card mt-4">
+    <div class="card-header">
+        <h2 class="card-title">Convites Pendentes</h2>
+    </div>
+    <div class="card-body">
+        <div class="table-responsive">
+            <table class="table table-hover">
+                <thead>
+                    <tr>
+                        <th>Email</th>
+                        <th>Função</th>
+                        <th>Convidado Por</th>
+                        <th>Data do Convite</th>
+                        <th>Expira em</th>
+                        <th>Ações</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for invite in invites %}
+                        <tr>
+                            <td>{{ invite.email }}</td>
+                            <td>
+                                {% if invite.role == 'admin' %}
+                                    <span class="badge badge-info">Administrador</span>
+                                {% else %}
+                                    <span class="badge badge-secondary">Operador</span>
+                                {% endif %}
+                            </td>
+                            <td>{{ invite.inviter.name }}</td>
+                            <td>{{ invite.created_at.strftime('%d/%m/%Y %H:%M') }}</td>
+                            <td>
+                                {% set days_left = (invite.expires_at - now).days %}
+                                {% if days_left < 0 %}
+                                    <span class="badge badge-danger">Expirado</span>
+                                {% else %}
+                                    {{ days_left }} dias
+                                {% endif %}
+                            </td>
+                            <td>
+                                <form action="{{ url_for('resend_invite', invite_id=invite.id) }}" method="POST" style="display: inline;">
+                                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                    <button type="submit" class="btn btn-info btn-sm">
+                                        <i class="fas fa-paper-plane"></i> Reenviar
+                                    </button>
+                                </form>
+                                <form action="{{ url_for('cancel_invite', invite_id=invite.id) }}" method="POST" style="display: inline;">
+                                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                    <button type="submit" class="btn btn-danger btn-sm" onclick="return confirm('Tem certeza que deseja cancelar este convite?');">
+                                        <i class="fas fa-times"></i> Cancelar
+                                    </button>
+                                </form>
+                            </td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endif %}
+{% endblock %}

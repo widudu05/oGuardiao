@@ -1,0 +1,66 @@
+{% extends 'base.html' %}
+
+{% block title %}Grupos - O Guardião{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h1>Grupos</h1>
+    <div>
+        <a href="{{ url_for('create_group') }}" class="btn btn-primary">
+            <i class="fas fa-plus"></i> Novo Grupo
+        </a>
+    </div>
+</div>
+
+<!-- Groups grid -->
+{% if groups|length > 0 %}
+    <div class="row">
+        {% for group in groups %}
+            <div class="col-md-4 mb-4">
+                <div class="card h-100">
+                    <div class="card-header d-flex justify-content-between align-items-center">
+                        <h3 class="card-title mb-0">{{ group.name }}</h3>
+                        <div class="dropdown">
+                            <button class="btn btn-sm btn-secondary" type="button" id="group-{{ group.id }}-actions" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                                <i class="fas fa-ellipsis-v"></i>
+                            </button>
+                            <div class="dropdown-menu dropdown-menu-right" aria-labelledby="group-{{ group.id }}-actions">
+                                <a class="dropdown-item" href="{{ url_for('edit_group', group_id=group.id) }}">
+                                    <i class="fas fa-edit"></i> Editar
+                                </a>
+                                <form id="delete-group-{{ group.id }}" action="{{ url_for('delete_group', group_id=group.id) }}" method="POST" style="display: none;">
+                                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                </form>
+                                <a class="dropdown-item text-danger" href="#" onclick="deleteGroup({{ group.id }}, '{{ group.name }}'); return false;">
+                                    <i class="fas fa-trash"></i> Excluir
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="card-body">
+                        <p><strong>Descrição:</strong> {{ group.description or 'Sem descrição' }}</p>
+                        <p><strong>Criado em:</strong> {{ group.created_at.strftime('%d/%m/%Y') }}</p>
+                    </div>
+                    <div class="card-footer">
+                        <p class="mb-0"><span class="badge badge-info">{{ group.companies|length }}</span> Empresas</p>
+                    </div>
+                </div>
+            </div>
+        {% endfor %}
+    </div>
+{% else %}
+    <div class="alert alert-info">
+        Nenhum grupo encontrado. <a href="{{ url_for('create_group') }}">Crie um novo grupo</a> para organizar suas empresas.
+    </div>
+{% endif %}
+{% endblock %}
+
+{% block scripts %}
+<script>
+function deleteGroup(groupId, groupName) {
+    if (confirm(`Tem certeza que deseja excluir o grupo "${groupName}"? Esta ação não pode ser desfeita.`)) {
+        document.getElementById(`delete-group-${groupId}`).submit();
+    }
+}
+</script>
+{% endblock %}

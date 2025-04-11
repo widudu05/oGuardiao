@@ -1,104 +1,144 @@
-{% extends "layout.html" %}
+{% extends 'base.html' %}
+
+{% block title %}Registrar - O Guardião{% endblock %}
 
 {% block auth_content %}
-<div class="container mx-auto px-6 py-12">
-    <div class="flex justify-center">
-        <div class="w-full max-w-lg">
-            <div class="bg-white rounded-lg shadow-lg overflow-hidden">
-                <div class="bg-azul-profundo px-6 py-4">
-                    <h2 class="text-xl font-bold text-white text-center">Cadastro</h2>
-                </div>
-                <div class="p-6">
-                    <form method="POST" action="{{ url_for('auth.register') }}">
-                        {{ form.hidden_tag() }}
-                        
-                        <div class="mb-4">
-                            <label for="nome" class="form-label">Seu Nome</label>
-                            {{ form.nome(class="form-input", placeholder="Nome completo") }}
-                            {% if form.nome.errors %}
-                                {% for error in form.nome.errors %}
-                                    <span class="form-error">{{ error }}</span>
-                                {% endfor %}
-                            {% endif %}
-                        </div>
-                        
-                        <div class="mb-4">
-                            <label for="email" class="form-label">Email</label>
-                            {{ form.email(class="form-input", placeholder="seu@email.com") }}
-                            {% if form.email.errors %}
-                                {% for error in form.email.errors %}
-                                    <span class="form-error">{{ error }}</span>
-                                {% endfor %}
-                            {% endif %}
-                        </div>
-                        
-                        <div class="mb-4">
-                            <label for="password" class="form-label">Senha</label>
-                            <div class="relative">
-                                {{ form.password(class="form-input", placeholder="Mínimo 8 caracteres") }}
-                                <button type="button" class="password-toggle absolute right-3 top-2 text-gray-500" data-target="password">
-                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
-                                        <path d="M10 12a2 2 0 100-4 2 2 0 000 4z" />
-                                        <path fill-rule="evenodd" d="M.458 10C1.732 5.943 5.522 3 10 3s8.268 2.943 9.542 7c-1.274 4.057-5.064 7-9.542 7S1.732 14.057.458 10zM14 10a4 4 0 11-8 0 4 4 0 018 0z" clip-rule="evenodd" />
-                                    </svg>
-                                </button>
-                            </div>
-                            {% if form.password.errors %}
-                                {% for error in form.password.errors %}
-                                    <span class="form-error">{{ error }}</span>
-                                {% endfor %}
-                            {% endif %}
-                        </div>
-                        
-                        <div class="mb-4">
-                            <label for="password2" class="form-label">Confirmar Senha</label>
-                            <div class="relative">
-                                {{ form.password2(class="form-input", placeholder="Repita sua senha") }}
-                                <button type="button" class="password-toggle absolute right-3 top-2 text-gray-500" data-target="password2">
-                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
-                                        <path d="M10 12a2 2 0 100-4 2 2 0 000 4z" />
-                                        <path fill-rule="evenodd" d="M.458 10C1.732 5.943 5.522 3 10 3s8.268 2.943 9.542 7c-1.274 4.057-5.064 7-9.542 7S1.732 14.057.458 10zM14 10a4 4 0 11-8 0 4 4 0 018 0z" clip-rule="evenodd" />
-                                    </svg>
-                                </button>
-                            </div>
-                            {% if form.password2.errors %}
-                                {% for error in form.password2.errors %}
-                                    <span class="form-error">{{ error }}</span>
-                                {% endfor %}
-                            {% endif %}
-                        </div>
-                        
-                        <div class="mb-4">
-                            <label for="nome_organizacao" class="form-label">Nome da Organização</label>
-                            {{ form.nome_organizacao(class="form-input", placeholder="Nome da sua empresa") }}
-                            {% if form.nome_organizacao.errors %}
-                                {% for error in form.nome_organizacao.errors %}
-                                    <span class="form-error">{{ error }}</span>
-                                {% endfor %}
-                            {% endif %}
-                        </div>
-                        
-                        <div class="mb-6">
-                            <label for="cnpj" class="form-label">CNPJ</label>
-                            {{ form.cnpj(class="form-input cnpj-input", placeholder="00.000.000/0000-00") }}
-                            {% if form.cnpj.errors %}
-                                {% for error in form.cnpj.errors %}
-                                    <span class="form-error">{{ error }}</span>
-                                {% endfor %}
-                            {% endif %}
-                        </div>
-                        
-                        <div class="mb-4">
-                            <button type="submit" class="w-full btn-primary py-2">Criar Conta</button>
-                        </div>
-                    </form>
-                    
-                    <div class="text-center mt-6">
-                        <p class="text-sm text-gray-600">Já tem uma conta? <a href="{{ url_for('auth.login') }}" class="text-azul-claro hover:text-azul-profundo">Faça login</a></p>
-                    </div>
-                </div>
+<div class="auth-container">
+    <div class="auth-card" style="max-width: 500px;">
+        <div class="auth-logo">
+            <a href="{{ url_for('index') }}">
+                <img src="{{ url_for('static', filename='svg/logo.svg') }}" alt="O Guardião Logo" width="80">
+            </a>
+        </div>
+        
+        <h1 class="auth-title">Criar Nova Conta</h1>
+        
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                {% for category, message in messages %}
+                    <div class="alert alert-{{ category }}">{{ message }}</div>
+                {% endfor %}
+            {% endif %}
+        {% endwith %}
+        
+        <form method="POST" action="{{ url_for('register') }}">
+            {{ form.hidden_tag() }}
+            
+            <div class="form-group">
+                {{ form.name.label(class="form-label") }}
+                {{ form.name(class="form-control", placeholder="Seu nome completo") }}
+                {% if form.name.errors %}
+                    {% for error in form.name.errors %}
+                        <div class="form-text text-danger">{{ error }}</div>
+                    {% endfor %}
+                {% endif %}
             </div>
+            
+            <div class="form-group">
+                {{ form.email.label(class="form-label") }}
+                {{ form.email(class="form-control", placeholder="seu@email.com") }}
+                {% if form.email.errors %}
+                    {% for error in form.email.errors %}
+                        <div class="form-text text-danger">{{ error }}</div>
+                    {% endfor %}
+                {% endif %}
+            </div>
+            
+            <div class="form-group">
+                {{ form.password.label(class="form-label") }}
+                {{ form.password(class="form-control", placeholder="••••••••") }}
+                {% if form.password.errors %}
+                    {% for error in form.password.errors %}
+                        <div class="form-text text-danger">{{ error }}</div>
+                    {% endfor %}
+                {% endif %}
+                <div class="form-text">A senha deve ter pelo menos 8 caracteres.</div>
+            </div>
+            
+            <div class="form-group">
+                {{ form.confirm_password.label(class="form-label") }}
+                {{ form.confirm_password(class="form-control", placeholder="••••••••") }}
+                {% if form.confirm_password.errors %}
+                    {% for error in form.confirm_password.errors %}
+                        <div class="form-text text-danger">{{ error }}</div>
+                    {% endfor %}
+                {% endif %}
+            </div>
+            
+            <hr class="my-4">
+            <h4 class="mb-3">Informações da Organização</h4>
+            
+            <div class="form-group">
+                {{ form.organization_name.label(class="form-label") }}
+                {{ form.organization_name(class="form-control", placeholder="Nome da sua organização") }}
+                {% if form.organization_name.errors %}
+                    {% for error in form.organization_name.errors %}
+                        <div class="form-text text-danger">{{ error }}</div>
+                    {% endfor %}
+                {% endif %}
+            </div>
+            
+            <div class="form-group">
+                {{ form.cnpj.label(class="form-label") }}
+                {{ form.cnpj(class="form-control", placeholder="XX.XXX.XXX/XXXX-XX", data_mask="cnpj") }}
+                {% if form.cnpj.errors %}
+                    {% for error in form.cnpj.errors %}
+                        <div class="form-text text-danger">{{ error }}</div>
+                    {% endfor %}
+                {% endif %}
+            </div>
+            
+            <div class="form-group">
+                <label>
+                    {{ form.terms(type="checkbox") }} {{ form.terms.label.text }}
+                </label>
+                {% if form.terms.errors %}
+                    {% for error in form.terms.errors %}
+                        <div class="form-text text-danger">{{ error }}</div>
+                    {% endfor %}
+                {% endif %}
+            </div>
+            
+            <div class="form-group">
+                <button type="submit" class="btn btn-primary w-100">Registrar</button>
+            </div>
+        </form>
+        
+        <div class="text-center mt-3">
+            <p>Já tem uma conta? <a href="{{ url_for('login') }}">Login</a></p>
         </div>
     </div>
 </div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // CNPJ mask
+    const cnpjInput = document.querySelector('[data-mask="cnpj"]');
+    if (cnpjInput) {
+        cnpjInput.addEventListener('input', function(e) {
+            let value = e.target.value;
+            
+            // Remove non-digits
+            value = value.replace(/\D/g, '');
+            
+            // Apply CNPJ mask: XX.XXX.XXX/XXXX-XX
+            if (value.length <= 2) {
+                // Do nothing for now
+            } else if (value.length <= 5) {
+                value = value.replace(/^(\d{2})(\d{1,3})/, '$1.$2');
+            } else if (value.length <= 8) {
+                value = value.replace(/^(\d{2})(\d{3})(\d{1,3})/, '$1.$2.$3');
+            } else if (value.length <= 12) {
+                value = value.replace(/^(\d{2})(\d{3})(\d{3})(\d{1,4})/, '$1.$2.$3/$4');
+            } else {
+                value = value.replace(/^(\d{2})(\d{3})(\d{3})(\d{4})(\d{1,2})/, '$1.$2.$3/$4-$5');
+            }
+            
+            e.target.value = value;
+        });
+    }
+});
+</script>
 {% endblock %}

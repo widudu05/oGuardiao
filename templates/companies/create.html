@@ -1,0 +1,94 @@
+{% extends 'base.html' %}
+
+{% block title %}Nova Empresa - O Guardião{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h1>Nova Empresa</h1>
+    <div>
+        <a href="{{ url_for('companies') }}" class="btn btn-secondary">
+            <i class="fas fa-arrow-left"></i> Voltar
+        </a>
+    </div>
+</div>
+
+<div class="card">
+    <div class="card-body">
+        <form method="POST" action="{{ url_for('create_company') }}">
+            {{ form.hidden_tag() }}
+            
+            <div class="form-group">
+                {{ form.name.label(class="form-label") }}
+                {{ form.name(class="form-control") }}
+                {% if form.name.errors %}
+                    {% for error in form.name.errors %}
+                        <div class="form-text text-danger">{{ error }}</div>
+                    {% endfor %}
+                {% endif %}
+            </div>
+            
+            <div class="form-group">
+                {{ form.trade_name.label(class="form-label") }}
+                {{ form.trade_name(class="form-control") }}
+                {% if form.trade_name.errors %}
+                    {% for error in form.trade_name.errors %}
+                        <div class="form-text text-danger">{{ error }}</div>
+                    {% endfor %}
+                {% endif %}
+            </div>
+            
+            <div class="form-group">
+                {{ form.cnpj.label(class="form-label") }}
+                {{ form.cnpj(class="form-control", data_mask="cnpj") }}
+                {% if form.cnpj.errors %}
+                    {% for error in form.cnpj.errors %}
+                        <div class="form-text text-danger">{{ error }}</div>
+                    {% endfor %}
+                {% endif %}
+            </div>
+            
+            <div class="form-group">
+                <div class="d-flex justify-content-between align-items-center">
+                    {{ form.group_id.label(class="form-label") }}
+                    <button type="button" id="create-new-group" class="btn btn-sm btn-primary">
+                        <i class="fas fa-plus"></i> Criar Novo Grupo
+                    </button>
+                </div>
+                {{ form.group_id(class="form-control") }}
+                {% if form.group_id.errors %}
+                    {% for error in form.group_id.errors %}
+                        <div class="form-text text-danger">{{ error }}</div>
+                    {% endfor %}
+                {% endif %}
+            </div>
+            
+            <!-- New group form (hidden by default) -->
+            <div id="new-group-form" class="card mt-3 mb-3" style="display: none;">
+                <div class="card-header">
+                    <h3 class="card-title">Novo Grupo</h3>
+                </div>
+                <div class="card-body">
+                    <div class="form-group">
+                        <label for="new_group_name" class="form-label">Nome do Grupo</label>
+                        <input type="text" id="new_group_name" class="form-control" placeholder="Nome do grupo">
+                    </div>
+                    <div class="form-group">
+                        <label for="new_group_description" class="form-label">Descrição</label>
+                        <textarea id="new_group_description" class="form-control" rows="3" placeholder="Descrição do grupo"></textarea>
+                    </div>
+                    <button type="button" id="submit-new-group" class="btn btn-primary">Salvar Grupo</button>
+                </div>
+            </div>
+            
+            <div class="form-group mt-4">
+                <button type="submit" class="btn btn-primary">Salvar Empresa</button>
+                <a href="{{ url_for('companies') }}" class="btn btn-secondary">Cancelar</a>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script src="{{ url_for('static', filename='js/companies.js') }}"></script>
+{% endblock %}

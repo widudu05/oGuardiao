@@ -1,98 +1,144 @@
 from flask_wtf import FlaskForm
 from flask_wtf.file import FileField, FileRequired, FileAllowed
 from wtforms import StringField, PasswordField, BooleanField, SelectField, TextAreaField, DateField, HiddenField
-from wtforms.validators import DataRequired, Email, Length, EqualTo, ValidationError
-from models import Usuario, Organizacao, TIPO_USUARIO_CHOICES, TIPO_CERTIFICADO_CHOICES, PLANO_CHOICES
+from wtforms.validators import DataRequired, Email, EqualTo, Length, ValidationError, Optional, Regexp
+from models import User, Organization, Company
 from datetime import datetime
 
 class LoginForm(FlaskForm):
     email = StringField('Email', validators=[DataRequired(), Email()])
     password = PasswordField('Senha', validators=[DataRequired()])
-    remember_me = BooleanField('Lembrar-me')
+    remember_me = BooleanField('Lembrar de mim')
     
-class MFAForm(FlaskForm):
-    code = StringField('Código MFA', validators=[DataRequired(), Length(6, 6)])
-
 class RegistrationForm(FlaskForm):
-    nome = StringField('Nome', validators=[DataRequired(), Length(1, 100)])
+    name = StringField('Nome completo', validators=[DataRequired(), Length(min=3, max=100)])
     email = StringField('Email', validators=[DataRequired(), Email()])
     password = PasswordField('Senha', validators=[
-        DataRequired(),
-        Length(8, 64, message='A senha deve ter pelo menos 8 caracteres')
+        DataRequired(), 
+        Length(min=8, message='A senha deve ter pelo menos 8 caracteres')
     ])
-    password2 = PasswordField('Confirmar Senha', validators=[
-        DataRequired(),
-        EqualTo('password', message='As senhas não coincidem')
+    confirm_password = PasswordField('Confirmar senha', validators=[
+        DataRequired(), 
+        EqualTo('password', message='As senhas devem ser iguais')
     ])
-    nome_organizacao = StringField('Nome da Organização', validators=[DataRequired()])
-    cnpj = StringField('CNPJ', validators=[DataRequired(), Length(14, 18)])
+    organization_name = StringField('Nome da organização', validators=[DataRequired(), Length(min=3, max=100)])
+    cnpj = StringField('CNPJ', validators=[
+        DataRequired(),
+        Regexp(r'^\d{2}\.\d{3}\.\d{3}/\d{4}-\d{2}$', message='CNPJ inválido. Use o formato: XX.XXX.XXX/XXXX-XX')
+    ])
+    terms = BooleanField('Eu aceito os termos de uso', validators=[DataRequired()])
     
-    def validate_email(self, field):
-        user = Usuario.query.filter_by(email=field.data).first()
+    def validate_email(self, email):
+        user = User.query.filter_by(email=email.data).first()
         if user:
-            raise ValidationError('Email já registrado. Por favor, use outro email.')
+            raise ValidationError('Este email já está sendo usado. Por favor, use outro.')
+
+class OrganizationForm(FlaskForm):
+    name = StringField('Nome da organização', validators=[DataRequired(), Length(min=3, max=100)])
+    cnpj = StringField('CNPJ', validators=[
+        DataRequired(),
+        Regexp(r'^\d{2}\.\d{3}\.\d{3}/\d{4}-\d{2}$', message='CNPJ inválido. Use o formato: XX.XXX.XXX/XXXX-XX')
+    ])
+    responsible = StringField('Responsável', validators=[DataRequired(), Length(min=3, max=100)])
+    plan = SelectField('Plano', choices=[
+        ('basic', 'Básico'),
+        ('premium', 'Premium'),
+        ('enterprise', 'Enterprise')
+    ], validators=[DataRequired()])
+
+class GroupForm(FlaskForm):
+    name = StringField('Nome do grupo', validators=[DataRequired(), Length(min=2, max=100)])
+    description = TextAreaField('Descrição', validators=[Optional(), Length(max=500)])
+
+class CompanyForm(FlaskForm):
+    name = StringField('Razão Social', validators=[DataRequired(), Length(min=3, max=100)])
+    trade_name = StringField('Nome Fantasia', validators=[Optional(), Length(max=100)])
+    cnpj = StringField('CNPJ', validators=[
+        DataRequired(),
+        Regexp(r'^\d{2}\.\d{3}\.\d{3}/\d{4}-\d{2}$', message='CNPJ inválido. Use o formato: XX.XXX.XXX/XXXX-XX')
+    ])
+    group_id = SelectField('Grupo', coerce=int, validators=[Optional()])
     
-    def validate_cnpj(self, field):
-        org = Organizacao.query.filter_by(cnpj=field.data).first()
-        if org:
-            raise ValidationError('CNPJ já registrado. Por favor, use outro CNPJ.')
+    def __init__(self, *args, organization_id=None, **kwargs):
+        super(CompanyForm, self).__init__(*args, **kwargs)
+        if organization_id:
+            from models import Group
+            from app import db
+            
+            self.group_id.choices = [(0, 'Sem grupo')] + [
+                (g.id, g.name) 
+                for g in Group.query.filter_by(organization_id=organization_id).all()
+            ]
 
-class ConviteForm(FlaskForm):
-    email = StringField('Email', validators=[DataRequired(), Email()])
-    tipo = SelectField('Tipo de Usuário', choices=TIPO_USUARIO_CHOICES, validators=[DataRequired()])
-
-class RegisterFromInviteForm(FlaskForm):
-    nome = StringField('Nome', validators=[DataRequired(), Length(1, 100)])
-    password = PasswordField('Senha', validators=[
-        DataRequired(),
-        Length(8, 64, message='A senha deve ter pelo menos 8 caracteres')
-    ])
-    password2 = PasswordField('Confirmar Senha', validators=[
-        DataRequired(),
-        EqualTo('password', message='As senhas não coincidem')
-    ])
-    token = HiddenField('Token', validators=[DataRequired()])
-
-class OrganizacaoForm(FlaskForm):
-    nome = StringField('Nome', validators=[DataRequired(), Length(1, 100)])
-    cnpj = StringField('CNPJ', validators=[DataRequired(), Length(14, 18)])
-    email_contato = StringField('Email de Contato', validators=[DataRequired(), Email()])
-    plano = SelectField('Plano', choices=PLANO_CHOICES, validators=[DataRequired()])
-
-class EmpresaForm(FlaskForm):
-    razao_social = StringField('Razão Social', validators=[DataRequired(), Length(1, 100)])
-    nome_fantasia = StringField('Nome Fantasia', validators=[Length(0, 100)])
-    cnpj = StringField('CNPJ', validators=[DataRequired(), Length(14, 18)])
-    grupo = StringField('Grupo', validators=[Length(0, 50)])
-    email_contato = StringField('Email de Contato', validators=[Email()])
-    telefone = StringField('Telefone', validators=[Length(0, 20)])
-
-class CertificadoUploadForm(FlaskForm):
-    tipo = SelectField('Tipo de Certificado', choices=TIPO_CERTIFICADO_CHOICES, validators=[DataRequired()])
-    nome = StringField('Nome do Certificado', validators=[DataRequired(), Length(1, 100)])
-    arquivo = FileField('Arquivo do Certificado', validators=[
+class CertificateUploadForm(FlaskForm):
+    name = StringField('Nome do certificado', validators=[DataRequired(), Length(min=3, max=100)])
+    type = SelectField('Tipo', choices=[
+        ('e-cnpj', 'e-CNPJ'),
+        ('e-cpf', 'e-CPF')
+    ], validators=[DataRequired()])
+    company_id = SelectField('Empresa', coerce=int, validators=[DataRequired()])
+    certificate_file = FileField('Arquivo do certificado', validators=[
         FileRequired(),
-        FileAllowed(['pfx', 'p12', 'cer'], 'Apenas arquivos PFX, P12 ou CER são permitidos.')
+        FileAllowed(['pfx', 'p12'], 'Apenas arquivos .pfx ou .p12 são permitidos.')
     ])
-    senha = PasswordField('Senha do Certificado', validators=[DataRequired()])
-    data_emissao = DateField('Data de Emissão', validators=[DataRequired()], format='%Y-%m-%d')
-    data_vencimento = DateField('Data de Vencimento', validators=[DataRequired()], format='%Y-%m-%d')
-    empresa_id = SelectField('Empresa', coerce=int, validators=[DataRequired()])
+    password = PasswordField('Senha do certificado', validators=[DataRequired()])
+    issue_date = DateField('Data de emissão', validators=[DataRequired()], format='%Y-%m-%d')
+    expiry_date = DateField('Data de validade', validators=[DataRequired()], format='%Y-%m-%d')
     
-    def validate_data_vencimento(self, field):
-        if field.data < datetime.now().date():
-            raise ValidationError('A data de vencimento não pode ser no passado.')
+    def __init__(self, *args, organization_id=None, **kwargs):
+        super(CertificateUploadForm, self).__init__(*args, **kwargs)
+        if organization_id:
+            from models import Company
+            
+            self.company_id.choices = [
+                (c.id, f"{c.name} ({c.cnpj})") 
+                for c in Company.query.filter_by(organization_id=organization_id).all()
+            ]
+    
+    def validate_expiry_date(self, expiry_date):
+        if expiry_date.data < datetime.now().date():
+            raise ValidationError('A data de validade não pode ser no passado.')
         
-        if self.data_emissao.data and field.data <= self.data_emissao.data:
-            raise ValidationError('A data de vencimento deve ser posterior à data de emissão.')
+        if self.issue_date.data and expiry_date.data <= self.issue_date.data:
+            raise ValidationError('A data de validade deve ser posterior à data de emissão.')
 
-class PerfilForm(FlaskForm):
-    nome = StringField('Nome', validators=[DataRequired(), Length(1, 100)])
+class UserInviteForm(FlaskForm):
     email = StringField('Email', validators=[DataRequired(), Email()])
-    current_password = PasswordField('Senha Atual')
-    new_password = PasswordField('Nova Senha', validators=[Length(0, 64)])
-    new_password2 = PasswordField('Confirmar Nova Senha', validators=[EqualTo('new_password')])
+    role = SelectField('Função', choices=[
+        ('admin', 'Administrador'),
+        ('operator', 'Operador')
+    ], validators=[DataRequired()])
+
+class AcceptInviteForm(FlaskForm):
+    name = StringField('Nome completo', validators=[DataRequired(), Length(min=3, max=100)])
+    password = PasswordField('Senha', validators=[
+        DataRequired(), 
+        Length(min=8, message='A senha deve ter pelo menos 8 caracteres')
+    ])
+    confirm_password = PasswordField('Confirmar senha', validators=[
+        DataRequired(), 
+        EqualTo('password', message='As senhas devem ser iguais')
+    ])
+    token = HiddenField('Token')
+
+class ProfileForm(FlaskForm):
+    name = StringField('Nome completo', validators=[DataRequired(), Length(min=3, max=100)])
+    current_password = PasswordField('Senha atual', validators=[Optional()])
+    new_password = PasswordField('Nova senha', validators=[
+        Optional(), 
+        Length(min=8, message='A senha deve ter pelo menos 8 caracteres')
+    ])
+    confirm_password = PasswordField('Confirmar nova senha', validators=[
+        Optional(),
+        EqualTo('new_password', message='As senhas devem ser iguais')
+    ])
     
-class SetupMFAForm(FlaskForm):
-    code = StringField('Código de Verificação', validators=[DataRequired(), Length(6, 6)])
-    secret = HiddenField('Secret', validators=[DataRequired()])
+    def validate_confirm_password(self, confirm_password):
+        if self.new_password.data and not confirm_password.data:
+            raise ValidationError('Este campo é obrigatório quando você define uma nova senha.')
+
+class MFASetupForm(FlaskForm):
+    code = StringField('Código de verificação', validators=[
+        DataRequired(),
+        Regexp(r'^\d{6}$', message='O código deve conter 6 dígitos')
+    ])

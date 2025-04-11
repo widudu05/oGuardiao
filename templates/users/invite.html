@@ -1,0 +1,77 @@
+{% extends 'base.html' %}
+
+{% block title %}Convidar Usuário - O Guardião{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h1>Convidar Usuário</h1>
+    <div>
+        <a href="{{ url_for('users') }}" class="btn btn-secondary">
+            <i class="fas fa-arrow-left"></i> Voltar
+        </a>
+    </div>
+</div>
+
+<div class="card">
+    <div class="card-body">
+        <form method="POST" action="{{ url_for('invite_user') }}">
+            {{ form.hidden_tag() }}
+            
+            <div class="form-group">
+                {{ form.email.label(class="form-label") }}
+                {{ form.email(class="form-control", placeholder="email@exemplo.com") }}
+                {% if form.email.errors %}
+                    {% for error in form.email.errors %}
+                        <div class="form-text text-danger">{{ error }}</div>
+                    {% endfor %}
+                {% endif %}
+            </div>
+            
+            <div class="form-group">
+                {{ form.role.label(class="form-label") }}
+                {{ form.role(class="form-control") }}
+                {% if form.role.errors %}
+                    {% for error in form.role.errors %}
+                        <div class="form-text text-danger">{{ error }}</div>
+                    {% endfor %}
+                {% endif %}
+                
+                <div class="mt-2">
+                    <p><strong>Permissões:</strong></p>
+                    <div class="row">
+                        <div class="col-md-6">
+                            <h5>Administrador</h5>
+                            <ul>
+                                <li>Gerenciar todas as empresas</li>
+                                <li>Gerenciar todos os certificados</li>
+                                <li>Convidar novos usuários</li>
+                                <li>Visualizar logs de auditoria</li>
+                                <li>Exportar relatórios</li>
+                            </ul>
+                        </div>
+                        <div class="col-md-6">
+                            <h5>Operador</h5>
+                            <ul>
+                                <li>Visualizar empresas</li>
+                                <li>Visualizar certificados</li>
+                                <li>Fazer upload de certificados</li>
+                                <li>Não pode convidar usuários</li>
+                                <li>Não pode acessar logs de auditoria</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="alert alert-info">
+                <i class="fas fa-info-circle"></i> Um email de convite será enviado com instruções para criar uma conta.
+            </div>
+            
+            <div class="form-group mt-4">
+                <button type="submit" class="btn btn-primary">Enviar Convite</button>
+                <a href="{{ url_for('users') }}" class="btn btn-secondary">Cancelar</a>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}

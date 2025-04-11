@@ -1,0 +1,41 @@
+<nav class="navbar">
+    <div class="container-fluid">
+        <div class="d-flex align-items-center">
+            <button class="btn-mobile-menu mr-3" type="button">
+                <i class="fas fa-bars"></i>
+            </button>
+            <a href="{{ url_for('dashboard') }}" class="navbar-brand">
+                <img src="{{ url_for('static', filename='svg/logo.svg') }}" alt="O Guardião Logo" height="36">
+                <span class="ml-2">O Guardião</span>
+            </a>
+        </div>
+        
+        <div class="navbar-nav">
+            {% if check_expiring_certificates() > 0 %}
+                <a href="{{ url_for('certificates', status='expiring-soon') }}" class="nav-link mr-3" data-tooltip="Certificados expirando">
+                    <i class="fas fa-bell"></i>
+                    <span class="badge badge-danger">{{ check_expiring_certificates() }}</span>
+                </a>
+            {% endif %}
+            
+            <div class="dropdown">
+                <button class="nav-link dropdown-toggle" type="button" id="userDropdown" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                    <i class="fas fa-user-circle mr-1"></i>
+                    {{ current_user.name }}
+                </button>
+                <div class="dropdown-menu dropdown-menu-right" aria-labelledby="userDropdown">
+                    <a class="dropdown-item" href="{{ url_for('profile') }}">
+                        <i class="fas fa-user mr-2"></i> Perfil
+                    </a>
+                    <a class="dropdown-item" href="{{ url_for('settings') if 'settings' in current_app.view_functions else '#' }}">
+                        <i class="fas fa-cog mr-2"></i> Configurações
+                    </a>
+                    <div class="dropdown-divider"></div>
+                    <a class="dropdown-item" href="{{ url_for('logout') }}">
+                        <i class="fas fa-sign-out-alt mr-2"></i> Sair
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</nav>

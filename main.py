@@ -1,10 +1,7 @@
-from app import app
-import routes  # Import routes to register them
-import os
-import logging
+from app import app  # noqa: F401
 
-# Set up logging
-logging.basicConfig(level=logging.DEBUG)
+# This file is used to start the application
+# The actual application is defined in app.py
 
 if __name__ == "__main__":
-    app.run(host="0.0.0.0", port=5000, debug=True)
+    app.run(host="0.0.0.0", port=5000)

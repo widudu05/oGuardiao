@@ -1,0 +1,258 @@
+{% extends 'base.html' %}
+
+{% block title %}Configurações - O Guardião{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h1>Configurações</h1>
+</div>
+
+<div class="row">
+    <div class="col-md-3">
+        <div class="card mb-4">
+            <div class="card-body">
+                <div class="nav flex-column nav-pills" id="v-pills-tab" role="tablist" aria-orientation="vertical">
+                    <a class="nav-link active" id="v-pills-general-tab" data-toggle="pill" href="#v-pills-general" role="tab" aria-controls="v-pills-general" aria-selected="true">
+                        <i class="fas fa-cog mr-2"></i> Geral
+                    </a>
+                    <a class="nav-link" id="v-pills-notifications-tab" data-toggle="pill" href="#v-pills-notifications" role="tab" aria-controls="v-pills-notifications" aria-selected="false">
+                        <i class="fas fa-bell mr-2"></i> Notificações
+                    </a>
+                    <a class="nav-link" id="v-pills-security-tab" data-toggle="pill" href="#v-pills-security" role="tab" aria-controls="v-pills-security" aria-selected="false">
+                        <i class="fas fa-shield-alt mr-2"></i> Segurança
+                    </a>
+                    {% if current_user.role == 'master_admin' %}
+                        <a class="nav-link" id="v-pills-organization-tab" data-toggle="pill" href="#v-pills-organization" role="tab" aria-controls="v-pills-organization" aria-selected="false">
+                            <i class="fas fa-building mr-2"></i> Organização
+                        </a>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-9">
+        <div class="tab-content" id="v-pills-tabContent">
+            <!-- General Settings -->
+            <div class="tab-pane fade show active" id="v-pills-general" role="tabpanel" aria-labelledby="v-pills-general-tab">
+                <div class="card">
+                    <div class="card-header">
+                        <h2 class="card-title">Configurações Gerais</h2>
+                    </div>
+                    <div class="card-body">
+                        <form method="POST" action="{{ url_for('settings') }}">
+                            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                            <input type="hidden" name="form_type" value="general">
+                            
+                            <div class="form-group">
+                                <label for="timezone" class="form-label">Fuso Horário</label>
+                                <select id="timezone" name="timezone" class="form-control">
+                                    <option value="America/Sao_Paulo" selected>Brasília (GMT-3)</option>
+                                    <option value="America/Manaus">Manaus (GMT-4)</option>
+                                    <option value="America/Rio_Branco">Rio Branco (GMT-5)</option>
+                                    <option value="America/Noronha">Fernando de Noronha (GMT-2)</option>
+                                </select>
+                            </div>
+                            
+                            <div class="form-group">
+                                <label for="language" class="form-label">Idioma</label>
+                                <select id="language" name="language" class="form-control">
+                                    <option value="pt_BR" selected>Português (Brasil)</option>
+                                    <option value="en_US">Inglês (Estados Unidos)</option>
+                                    <option value="es_ES">Espanhol</option>
+                                </select>
+                            </div>
+                            
+                            <button type="submit" class="btn btn-primary">Salvar Alterações</button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Notification Settings -->
+            <div class="tab-pane fade" id="v-pills-notifications" role="tabpanel" aria-labelledby="v-pills-notifications-tab">
+                <div class="card">
+                    <div class="card-header">
+                        <h2 class="card-title">Configurações de Notificações</h2>
+                    </div>
+                    <div class="card-body">
+                        <form method="POST" action="{{ url_for('settings') }}">
+                            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                            <input type="hidden" name="form_type" value="notifications">
+                            
+                            <div class="form-group">
+                                <div class="custom-control custom-switch">
+                                    <input type="checkbox" class="custom-control-input" id="email_notifications" name="email_notifications" checked>
+                                    <label class="custom-control-label" for="email_notifications">Receber notificações por email</label>
+                                </div>
+                            </div>
+                            
+                            <div class="form-group">
+                                <label class="form-label">Alertas de vencimento de certificados</label>
+                                <div class="custom-control custom-switch">
+                                    <input type="checkbox" class="custom-control-input" id="expiry_30_days" name="expiry_30_days" checked>
+                                    <label class="custom-control-label" for="expiry_30_days">30 dias antes do vencimento</label>
+                                </div>
+                                <div class="custom-control custom-switch mt-2">
+                                    <input type="checkbox" class="custom-control-input" id="expiry_15_days" name="expiry_15_days" checked>
+                                    <label class="custom-control-label" for="expiry_15_days">15 dias antes do vencimento</label>
+                                </div>
+                                <div class="custom-control custom-switch mt-2">
+                                    <input type="checkbox" class="custom-control-input" id="expiry_5_days" name="expiry_5_days" checked>
+                                    <label class="custom-control-label" for="expiry_5_days">5 dias antes do vencimento</label>
+                                </div>
+                            </div>
+                            
+                            <button type="submit" class="btn btn-primary">Salvar Alterações</button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Security Settings -->
+            <div class="tab-pane fade" id="v-pills-security" role="tabpanel" aria-labelledby="v-pills-security-tab">
+                <div class="card">
+                    <div class="card-header">
+                        <h2 class="card-title">Segurança</h2>
+                    </div>
+                    <div class="card-body">
+                        <div class="mb-4">
+                            <h4>Autenticação de Dois Fatores (MFA)</h4>
+                            
+                            {% if current_user.mfa_enabled %}
+                                <div class="alert alert-success">
+                                    <i class="fas fa-check-circle"></i> MFA está ativado para sua conta.
+                                </div>
+                                
+                                <form method="POST" action="{{ url_for('mfa_disable') }}">
+                                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                    <div class="form-group">
+                                        <label for="password">Confirme sua senha para desativar:</label>
+                                        <input type="password" id="password" name="password" class="form-control" required>
+                                    </div>
+                                    <button type="submit" class="btn btn-danger">Desativar MFA</button>
+                                </form>
+                            {% else %}
+                                <div class="alert alert-warning">
+                                    <i class="fas fa-exclamation-triangle"></i> MFA não está ativado para sua conta.
+                                </div>
+                                <p>A autenticação de dois fatores adiciona uma camada extra de segurança à sua conta.</p>
+                                <a href="{{ url_for('mfa_setup') }}" class="btn btn-primary">Configurar MFA</a>
+                            {% endif %}
+                        </div>
+                        
+                        <hr>
+                        
+                        <div class="mt-4">
+                            <h4>Sessões Ativas</h4>
+                            <div class="table-responsive">
+                                <table class="table table-hover">
+                                    <thead>
+                                        <tr>
+                                            <th>Dispositivo</th>
+                                            <th>Localização</th>
+                                            <th>Último Acesso</th>
+                                            <th>Ações</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <tr>
+                                            <td>
+                                                <i class="fas fa-laptop"></i> Dispositivo Atual
+                                            </td>
+                                            <td>São Paulo, Brasil</td>
+                                            <td>Agora</td>
+                                            <td>
+                                                <span class="badge badge-success">Atual</span>
+                                            </td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Organization Settings (Master Admin only) -->
+            {% if current_user.role == 'master_admin' %}
+                <div class="tab-pane fade" id="v-pills-organization" role="tabpanel" aria-labelledby="v-pills-organization-tab">
+                    <div class="card">
+                        <div class="card-header">
+                            <h2 class="card-title">Configurações da Organização</h2>
+                        </div>
+                        <div class="card-body">
+                            <form method="POST" action="{{ url_for('settings') }}">
+                                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                <input type="hidden" name="form_type" value="organization">
+                                
+                                <div class="form-group">
+                                    <label for="organization_name" class="form-label">Nome da Organização</label>
+                                    <input type="text" id="organization_name" name="organization_name" class="form-control" value="{{ current_user.organization.name }}">
+                                </div>
+                                
+                                <div class="form-group">
+                                    <label for="organization_cnpj" class="form-label">CNPJ</label>
+                                    <input type="text" id="organization_cnpj" name="organization_cnpj" class="form-control" value="{{ current_user.organization.cnpj }}" data-mask="cnpj">
+                                </div>
+                                
+                                <div class="form-group">
+                                    <label for="organization_responsible" class="form-label">Responsável</label>
+                                    <input type="text" id="organization_responsible" name="organization_responsible" class="form-control" value="{{ current_user.organization.responsible }}">
+                                </div>
+                                
+                                <button type="submit" class="btn btn-primary">Salvar Alterações</button>
+                            </form>
+                            
+                            <hr>
+                            
+                            <div class="mt-4">
+                                <h4>Plano Atual</h4>
+                                <div class="card mb-3">
+                                    <div class="card-body">
+                                        <h5 class="card-title">Plano {{ current_user.organization.plan|capitalize }}</h5>
+                                        <p>Status: <span class="badge badge-success">Ativo</span></p>
+                                        
+                                        {% if current_user.organization.plan == 'basic' %}
+                                            <a href="#" class="btn btn-primary">Fazer Upgrade</a>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Handle tab navigation
+    const pills = document.querySelectorAll('.nav-link');
+    const tabContents = document.querySelectorAll('.tab-pane');
+    
+    pills.forEach(pill => {
+        pill.addEventListener('click', function(e) {
+            e.preventDefault();
+            
+            // Remove active class from all pills and tab contents
+            pills.forEach(p => p.classList.remove('active'));
+            tabContents.forEach(tc => {
+                tc.classList.remove('show', 'active');
+            });
+            
+            // Add active class to clicked pill
+            this.classList.add('active');
+            
+            // Show corresponding tab content
+            const target = this.getAttribute('href').substring(1);
+            document.getElementById(target).classList.add('show', 'active');
+        });
+    });
+});
+</script>
+{% endblock %}

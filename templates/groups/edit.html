@@ -1,0 +1,118 @@
+{% extends 'base.html' %}
+
+{% block title %}Editar Grupo - O Guardião{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h1>Editar Grupo</h1>
+    <div>
+        <a href="{{ url_for('groups') }}" class="btn btn-secondary">
+            <i class="fas fa-arrow-left"></i> Voltar
+        </a>
+    </div>
+</div>
+
+<div class="card">
+    <div class="card-body">
+        <form method="POST" action="{{ url_for('edit_group', group_id=group.id) }}">
+            {{ form.hidden_tag() }}
+            
+            <div class="form-group">
+                {{ form.name.label(class="form-label") }}
+                {{ form.name(class="form-control") }}
+                {% if form.name.errors %}
+                    {% for error in form.name.errors %}
+                        <div class="form-text text-danger">{{ error }}</div>
+                    {% endfor %}
+                {% endif %}
+            </div>
+            
+            <div class="form-group">
+                {{ form.description.label(class="form-label") }}
+                {{ form.description(class="form-control", rows=3) }}
+                {% if form.description.errors %}
+                    {% for error in form.description.errors %}
+                        <div class="form-text text-danger">{{ error }}</div>
+                    {% endfor %}
+                {% endif %}
+            </div>
+            
+            <div class="form-group mt-4">
+                <button type="submit" class="btn btn-primary">Salvar Alterações</button>
+                <a href="{{ url_for('groups') }}" class="btn btn-secondary">Cancelar</a>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Companies in this group -->
+<div class="card mt-4">
+    <div class="card-header d-flex justify-content-between align-items-center">
+        <h2 class="card-title">Empresas neste Grupo</h2>
+        <a href="{{ url_for('create_company') }}" class="btn btn-primary btn-sm">
+            <i class="fas fa-plus"></i> Nova Empresa
+        </a>
+    </div>
+    <div class="card-body">
+        {% if companies|length > 0 %}
+            <div class="table-responsive">
+                <table class="table table-hover">
+                    <thead>
+                        <tr>
+                            <th>Nome</th>
+                            <th>CNPJ</th>
+                            <th>Nome Fantasia</th>
+                            <th>Ações</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for company in companies %}
+                            <tr>
+                                <td>{{ company.name }}</td>
+                                <td>{{ company.cnpj }}</td>
+                                <td>{{ company.trade_name or '-' }}</td>
+                                <td>
+                                    <a href="{{ url_for('edit_company', company_id=company.id) }}" class="btn btn-sm btn-primary">
+                                        <i class="fas fa-edit"></i>
+                                    </a>
+                                </td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        {% else %}
+            <div class="alert alert-info">
+                Nenhuma empresa neste grupo. <a href="{{ url_for('create_company') }}">Adicione empresas</a> a este grupo.
+            </div>
+        {% endif %}
+    </div>
+</div>
+
+<!-- Delete group -->
+<div class="card mt-4 border-danger">
+    <div class="card-header bg-danger text-white">
+        <h3 class="card-title">Zona de Perigo</h3>
+    </div>
+    <div class="card-body">
+        <h4>Excluir Grupo</h4>
+        <p>Esta ação não poderá ser desfeita. Se houver empresas neste grupo, você não poderá excluí-lo.</p>
+        <form action="{{ url_for('delete_group', group_id=group.id) }}" method="POST" id="delete-group-form">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+            <button type="button" class="btn btn-danger" onclick="confirmDelete()">
+                <i class="fas fa-trash"></i> Excluir Grupo
+            </button>
+        </form>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+function confirmDelete() {
+    if (confirm('Tem certeza que deseja excluir este grupo? Esta ação não pode ser desfeita.')) {
+        document.getElementById('delete-group-form').submit();
+    }
+}
+</script>
+{% endblock %}

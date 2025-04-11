@@ -1,0 +1,41 @@
+{% extends 'base.html' %}
+
+{% block title %}Erro {{ error }} - O Guardião{% endblock %}
+
+{% block auth_content %}
+<div class="auth-container">
+    <div class="auth-card">
+        <div class="auth-logo">
+            <a href="{{ url_for('index') }}">
+                <img src="{{ url_for('static', filename='svg/logo.svg') }}" alt="O Guardião Logo" width="80">
+            </a>
+        </div>
+        
+        <h1 class="auth-title">Erro {{ error }}</h1>
+        
+        <div class="text-center mb-4">
+            {% if error == 404 %}
+                <i class="fas fa-map-marker-alt" style="font-size: 4rem; color: #3B82F6;"></i>
+                <p class="mt-3">Oops! Página não encontrada.</p>
+                <p>{{ message }}</p>
+            {% elif error == 500 %}
+                <i class="fas fa-exclamation-triangle" style="font-size: 4rem; color: #EF4444;"></i>
+                <p class="mt-3">Ocorreu um erro no servidor.</p>
+                <p>{{ message }}</p>
+            {% elif error == 403 %}
+                <i class="fas fa-lock" style="font-size: 4rem; color: #F59E0B;"></i>
+                <p class="mt-3">Acesso negado.</p>
+                <p>{{ message }}</p>
+            {% else %}
+                <i class="fas fa-exclamation-circle" style="font-size: 4rem; color: #EF4444;"></i>
+                <p class="mt-3">Ocorreu um erro.</p>
+                <p>{{ message }}</p>
+            {% endif %}
+        </div>
+        
+        <div class="d-flex justify-content-center">
+            <a href="{{ url_for('index') }}" class="btn btn-primary">Voltar à Página Inicial</a>
+        </div>
+    </div>
+</div>
+{% endblock %}
