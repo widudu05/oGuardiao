@@ -11,6 +11,16 @@ O Guardião é uma plataforma SaaS (Software as a Service) para gerenciamento se
 - **Organização Hierárquica**: Gestão de empresas e grupos para organização eficiente dos certificados
 - **Auditoria**: Registro detalhado de todas as atividades realizadas na plataforma
 
+## Documentação
+
+O projeto inclui uma documentação técnica detalhada em Markdown:
+
+- [Documentação Técnica Completa](docs/README.md) - Índice de toda a documentação
+- [Arquitetura](docs/arquitetura.md) - Diagramas e fluxos de arquitetura
+- [API Reference](docs/api_reference.md) - Documentação da API RESTful
+- [Guia de Instalação](docs/instalacao.md) - Instalação e configuração
+- [Roadmap](docs/roadmap.md) - Planejamento futuro
+
 ## Integração
 
 O sistema prepara-se para integrar com:
@@ -27,7 +37,7 @@ O sistema prepara-se para integrar com:
 - **Frontend**: HTML, CSS, JavaScript
 - **Segurança**: Flask-Login, autenticação em dois fatores
 
-## Instalação
+## Instalação Rápida
 
 1. Clone o repositório
 ```
@@ -50,6 +60,12 @@ flask db upgrade
 ```
 gunicorn --bind 0.0.0.0:5000 main:app
 ```
+
+Para instruções detalhadas de instalação e configuração, consulte o [Guia de Instalação](docs/instalacao.md).
+
+## Suporte
+
+Para suporte técnico, entre em contato através do email suporte@oguardiao.com.br
 
 ## Licença
 
