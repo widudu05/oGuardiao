@@ -62,3 +62,15 @@ cover/
 *.iml
 *.iws
 *.ipr
+
+# Certificados digitais
+*.pfx
+*.p12
+*.pem
+*.cert
+*.key
+
+# Configurações específicas do O Guardião
+config.local.py
+credentials.json
+token.json
