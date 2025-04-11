@@ -1,0 +1,100 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+@import url('https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css');
+
+:root {
+  --color-azul-profundo: #1E3A8A;
+  --color-azul-claro: #3B82F6;
+  --color-branco: #FFFFFF;
+  --color-cinza-claro: #F3F4F6;
+  --color-cinza-escuro: #374151;
+}
+
+body {
+  font-family: 'Inter', sans-serif;
+  color: var(--color-cinza-escuro);
+  background-color: var(--color-cinza-claro);
+}
+
+.bg-azul-profundo {
+  background-color: var(--color-azul-profundo);
+}
+
+.bg-azul-claro {
+  background-color: var(--color-azul-claro);
+}
+
+.text-azul-profundo {
+  color: var(--color-azul-profundo);
+}
+
+.text-azul-claro {
+  color: var(--color-azul-claro);
+}
+
+.border-azul-profundo {
+  border-color: var(--color-azul-profundo);
+}
+
+.border-azul-claro {
+  border-color: var(--color-azul-claro);
+}
+
+.hover\:bg-azul-profundo:hover {
+  background-color: var(--color-azul-profundo);
+}
+
+.hover\:text-azul-profundo:hover {
+  color: var(--color-azul-profundo);
+}
+
+/* Custom styling for focus states */
+.focus\:ring-azul-claro:focus {
+  --tw-ring-color: var(--color-azul-claro);
+  --tw-ring-opacity: 0.5;
+}
+
+.focus\:border-azul-claro:focus {
+  border-color: var(--color-azul-claro);
+}
+
+/* Status colors */
+.status-valid {
+  color: #059669;
+}
+
+.status-attention {
+  color: #F59E0B;
+}
+
+.status-warning {
+  color: #F97316;
+}
+
+.status-critical {
+  color: #DC2626;
+}
+
+.status-expired {
+  color: #7F1D1D;
+}
+
+.bg-status-valid {
+  background-color: #ECFDF5;
+}
+
+.bg-status-attention {
+  background-color: #FFFBEB;
+}
+
+.bg-status-warning {
+  background-color: #FFF7ED;
+}
+
+.bg-status-critical {
+  background-color: #FEF2F2;
+}
+
+.bg-status-expired {
+  background-color: #EF4444;
+  color: white;
+}

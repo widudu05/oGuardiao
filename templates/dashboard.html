@@ -1,0 +1,201 @@
+{% extends "layout.html" %}
+
+{% block content %}
+<div class="mb-6 flex justify-between items-center">
+    <h1 class="text-2xl font-bold text-gray-800">Dashboard</h1>
+    <div class="flex">
+        <a href="{{ url_for('upload_certificado') }}" class="btn-primary flex items-center">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" viewBox="0 0 20 20" fill="currentColor">
+                <path fill-rule="evenodd" d="M10 3a1 1 0 011 1v5h5a1 1 0 110 2h-5v5a1 1 0 11-2 0v-5H4a1 1 0 110-2h5V4a1 1 0 011-1z" clip-rule="evenodd" />
+            </svg>
+            Novo Certificado
+        </a>
+    </div>
+</div>
+
+<!-- Alerts container -->
+<div id="alerts-container" class="mb-6" data-certificates="{{ certificates|tojson }}"></div>
+
+<!-- Stats Cards -->
+<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+    <div class="card stats-card relative">
+        <div class="stats-card-icon">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                <path fill-rule="evenodd" d="M6.267 3.455a3.066 3.066 0 001.745-.723 3.066 3.066 0 013.976 0 3.066 3.066 0 001.745.723 3.066 3.066 0 012.812 2.812c.051.643.304 1.254.723 1.745a3.066 3.066 0 010 3.976 3.066 3.066 0 00-.723 1.745 3.066 3.066 0 01-2.812 2.812 3.066 3.066 0 00-1.745.723 3.066 3.066 0 01-3.976 0 3.066 3.066 0 00-1.745-.723 3.066 3.066 0 01-2.812-2.812 3.066 3.066 0 00-.723-1.745 3.066 3.066 0 010-3.976 3.066 3.066 0 00.723-1.745 3.066 3.066 0 012.812-2.812zm7.44 5.252a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd" />
+            </svg>
+        </div>
+        <div class="stats-card-title">Certificados Válidos</div>
+        <div class="stats-card-value text-green-600">{{ valid_count }}</div>
+    </div>
+    
+    <div class="card stats-card relative">
+        <div class="stats-card-icon">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clip-rule="evenodd" />
+            </svg>
+        </div>
+        <div class="stats-card-title">Atenção</div>
+        <div class="stats-card-value text-yellow-500">{{ warning_count }}</div>
+    </div>
+    
+    <div class="card stats-card relative">
+        <div class="stats-card-icon">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                <path fill-rule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clip-rule="evenodd" />
+            </svg>
+        </div>
+        <div class="stats-card-title">Críticos</div>
+        <div class="stats-card-value text-red-600">{{ critical_count }}</div>
+    </div>
+    
+    <div class="card stats-card relative">
+        <div class="stats-card-icon">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd" />
+            </svg>
+        </div>
+        <div class="stats-card-title">Vencidos</div>
+        <div class="stats-card-value text-gray-500">{{ expired_count }}</div>
+    </div>
+</div>
+
+<!-- Charts Row -->
+<div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+    <div class="card p-6">
+        <h3 class="text-lg font-semibold mb-4">Status dos Certificados</h3>
+        <div class="h-64">
+            <canvas id="certificate-status-chart" data-valid-count="{{ valid_count }}" data-warning-count="{{ warning_count }}" data-critical-count="{{ critical_count }}" data-expired-count="{{ expired_count }}"></canvas>
+        </div>
+    </div>
+    
+    <div class="card p-6">
+        <h3 class="text-lg font-semibold mb-4">Informações Gerais</h3>
+        <div class="grid grid-cols-2 gap-4">
+            <div class="bg-gray-50 p-4 rounded-lg">
+                <div class="text-sm text-gray-500">Empresas</div>
+                <div class="text-2xl font-semibold">{{ company_count }}</div>
+            </div>
+            <div class="bg-gray-50 p-4 rounded-lg">
+                <div class="text-sm text-gray-500">Usuários</div>
+                <div class="text-2xl font-semibold">{{ user_count }}</div>
+            </div>
+            <div class="bg-gray-50 p-4 rounded-lg">
+                <div class="text-sm text-gray-500">Certificados Total</div>
+                <div class="text-2xl font-semibold">{{ valid_count + warning_count + critical_count + expired_count }}</div>
+            </div>
+            <div class="bg-gray-50 p-4 rounded-lg">
+                <div class="text-sm text-gray-500">Meu Perfil</div>
+                <div class="text-sm font-medium">
+                    <a href="{{ url_for('profile') }}" class="text-azul-claro hover:text-azul-profundo flex items-center">
+                        <span>Configurações</span>
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 ml-1" viewBox="0 0 20 20" fill="currentColor">
+                            <path fill-rule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clip-rule="evenodd" />
+                        </svg>
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Recent Certificates and Activity -->
+<div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+    <div class="card p-6">
+        <div class="flex justify-between items-center mb-4">
+            <h3 class="text-lg font-semibold">Certificados Recentes</h3>
+            <a href="{{ url_for('certificados') }}" class="text-sm text-azul-claro hover:text-azul-profundo flex items-center">
+                <span>Ver todos</span>
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 ml-1" viewBox="0 0 20 20" fill="currentColor">
+                    <path fill-rule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clip-rule="evenodd" />
+                </svg>
+            </a>
+        </div>
+        
+        {% if certificates %}
+        <div class="overflow-x-auto">
+            <table class="table w-full">
+                <thead>
+                    <tr>
+                        <th>Certificado</th>
+                        <th>Empresa</th>
+                        <th>Vencimento</th>
+                        <th>Status</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for certificado in certificates %}
+                    <tr>
+                        <td>
+                            <a href="{{ url_for('view_certificado', id=certificado.id) }}" class="text-azul-claro hover:text-azul-profundo">
+                                {{ certificado.nome }}
+                            </a>
+                        </td>
+                        <td>{{ certificado.empresa.razao_social }}</td>
+                        <td>{{ certificado.data_vencimento.strftime('%d/%m/%Y') }}</td>
+                        <td>
+                            {% set status = certificado.status() %}
+                            {% if status == "Válido" %}
+                                <span class="badge badge-green">{{ status }}</span>
+                            {% elif status == "Atenção" %}
+                                <span class="badge badge-yellow">{{ status }}</span>
+                            {% elif status == "Alerta" %}
+                                <span class="badge badge-yellow">{{ status }}</span>
+                            {% elif status == "Crítico" %}
+                                <span class="badge badge-red">{{ status }}</span>
+                            {% else %}
+                                <span class="badge badge-gray">{{ status }}</span>
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% else %}
+        <div class="text-center py-6">
+            <p class="text-gray-500">Nenhum certificado cadastrado.</p>
+            <a href="{{ url_for('upload_certificado') }}" class="btn-outline mt-4">Adicionar Certificado</a>
+        </div>
+        {% endif %}
+    </div>
+    
+    <div class="card p-6">
+        <div class="flex justify-between items-center mb-4">
+            <h3 class="text-lg font-semibold">Atividade Recente</h3>
+            {% if current_user.is_admin() %}
+            <a href="{{ url_for('auditoria') }}" class="text-sm text-azul-claro hover:text-azul-profundo flex items-center">
+                <span>Ver tudo</span>
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 ml-1" viewBox="0 0 20 20" fill="currentColor">
+                    <path fill-rule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clip-rule="evenodd" />
+                </svg>
+            </a>
+            {% endif %}
+        </div>
+        
+        {% if logs %}
+        <div class="space-y-4">
+            {% for log in logs %}
+            <div class="flex items-start p-3 bg-gray-50 rounded-lg">
+                <div class="flex-shrink-0 bg-blue-100 rounded-full p-2 mr-3">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-azul-profundo" viewBox="0 0 20 20" fill="currentColor">
+                        <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-12a1 1 0 10-2 0v4a1 1 0 00.293.707l2.828 2.829a1 1 0 101.415-1.415L11 9.586V6z" clip-rule="evenodd" />
+                    </svg>
+                </div>
+                <div>
+                    <div class="font-medium">{{ log.acao }}</div>
+                    <div class="text-sm text-gray-500">{{ log.data_hora.strftime('%d/%m/%Y %H:%M') }}</div>
+                    {% if log.descricao %}
+                    <div class="text-sm mt-1">{{ log.descricao }}</div>
+                    {% endif %}
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+        {% else %}
+        <div class="text-center py-6">
+            <p class="text-gray-500">Nenhuma atividade registrada.</p>
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

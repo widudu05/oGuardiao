@@ -1,0 +1,157 @@
+{% extends "layout.html" %}
+
+{% block content %}
+<div class="mb-6 flex justify-between items-center">
+    <h1 class="text-2xl font-bold text-gray-800">Empresas</h1>
+    <div class="flex">
+        <a href="{{ url_for('create_empresa') }}" class="btn-primary flex items-center">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" viewBox="0 0 20 20" fill="currentColor">
+                <path fill-rule="evenodd" d="M10 3a1 1 0 011 1v5h5a1 1 0 110 2h-5v5a1 1 0 11-2 0v-5H4a1 1 0 110-2h5V4a1 1 0 011-1z" clip-rule="evenodd" />
+            </svg>
+            Nova Empresa
+        </a>
+    </div>
+</div>
+
+<!-- Filters -->
+<div class="card p-6 mb-6">
+    <form method="GET" action="{{ url_for('empresas') }}" class="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <div>
+            <label for="grupo" class="form-label">Filtrar por Grupo</label>
+            <select name="grupo" id="grupo" class="form-input">
+                <option value="">Todos os Grupos</option>
+                {% for grupo in grupos %}
+                    <option value="{{ grupo }}" {% if grupo_filtro == grupo %}selected{% endif %}>{{ grupo }}</option>
+                {% endfor %}
+            </select>
+        </div>
+        
+        <div>
+            <label for="search" class="form-label">Buscar</label>
+            <input type="text" name="search" id="search" class="form-input" placeholder="Razão social, nome fantasia ou CNPJ" value="{{ search or '' }}">
+        </div>
+        
+        <div class="flex items-end">
+            <button type="submit" class="btn-primary px-4 py-2 mr-2">Filtrar</button>
+            <a href="{{ url_for('empresas') }}" class="btn-outline px-4 py-2">Limpar</a>
+        </div>
+    </form>
+</div>
+
+<!-- Companies List -->
+{% if empresas.items %}
+<div class="card p-6">
+    <div class="overflow-x-auto">
+        <table class="table w-full">
+            <thead>
+                <tr>
+                    <th>Razão Social</th>
+                    <th>CNPJ</th>
+                    <th>Grupo</th>
+                    <th>Certificados</th>
+                    <th>Ações</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for empresa in empresas.items %}
+                <tr>
+                    <td>
+                        <a href="{{ url_for('view_empresa', id=empresa.id) }}" class="text-azul-claro hover:text-azul-profundo font-medium">
+                            {{ empresa.razao_social }}
+                        </a>
+                        {% if empresa.nome_fantasia %}
+                        <div class="text-sm text-gray-500">{{ empresa.nome_fantasia }}</div>
+                        {% endif %}
+                    </td>
+                    <td>{{ empresa.cnpj }}</td>
+                    <td>
+                        {% if empresa.grupo %}
+                            <span class="badge badge-blue">{{ empresa.grupo }}</span>
+                        {% else %}
+                            <span class="text-gray-400">Sem grupo</span>
+                        {% endif %}
+                    </td>
+                    <td>{{ empresa.certificados|length }}</td>
+                    <td>
+                        <div class="flex space-x-2">
+                            <a href="{{ url_for('view_empresa', id=empresa.id) }}" class="text-azul-claro hover:text-azul-profundo" title="Ver detalhes">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                                    <path d="M10 12a2 2 0 100-4 2 2 0 000 4z" />
+                                    <path fill-rule="evenodd" d="M.458 10C1.732 5.943 5.522 3 10 3s8.268 2.943 9.542 7c-1.274 4.057-5.064 7-9.542 7S1.732 14.057.458 10zM14 10a4 4 0 11-8 0 4 4 0 018 0z" clip-rule="evenodd" />
+                                </svg>
+                            </a>
+                            <a href="{{ url_for('edit_empresa', id=empresa.id) }}" class="text-yellow-500 hover:text-yellow-600" title="Editar">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                                    <path d="M13.586 3.586a2 2 0 112.828 2.828l-.793.793-2.828-2.828.793-.793zM11.379 5.793L3 14.172V17h2.828l8.38-8.379-2.83-2.828z" />
+                                </svg>
+                            </a>
+                        </div>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    
+    <!-- Pagination -->
+    {% if empresas.pages > 1 %}
+    <div class="flex justify-center mt-6">
+        <ul class="pagination">
+            {% if empresas.has_prev %}
+            <li class="pagination-item">
+                <a href="{{ url_for('empresas', page=empresas.prev_num, grupo=grupo_filtro, search=search) }}" class="pagination-link">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                        <path fill-rule="evenodd" d="M12.707 5.293a1 1 0 010 1.414L9.414 10l3.293 3.293a1 1 0 01-1.414 1.414l-4-4a1 1 0 010-1.414l4-4a1 1 0 011.414 0z" clip-rule="evenodd" />
+                    </svg>
+                </a>
+            </li>
+            {% endif %}
+            
+            {% for page_num in empresas.iter_pages(left_edge=1, right_edge=1, left_current=2, right_current=2) %}
+                {% if page_num %}
+                    {% if empresas.page == page_num %}
+                    <li class="pagination-item">
+                        <span class="pagination-link pagination-link-active">{{ page_num }}</span>
+                    </li>
+                    {% else %}
+                    <li class="pagination-item">
+                        <a href="{{ url_for('empresas', page=page_num, grupo=grupo_filtro, search=search) }}" class="pagination-link">{{ page_num }}</a>
+                    </li>
+                    {% endif %}
+                {% else %}
+                    <li class="pagination-item">
+                        <span class="pagination-link">...</span>
+                    </li>
+                {% endif %}
+            {% endfor %}
+            
+            {% if empresas.has_next %}
+            <li class="pagination-item">
+                <a href="{{ url_for('empresas', page=empresas.next_num, grupo=grupo_filtro, search=search) }}" class="pagination-link">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                        <path fill-rule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clip-rule="evenodd" />
+                    </svg>
+                </a>
+            </li>
+            {% endif %}
+        </ul>
+    </div>
+    {% endif %}
+</div>
+{% else %}
+<div class="card p-6 text-center">
+    <div class="py-8">
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-16 w-16 text-gray-400 mb-4 mx-auto" viewBox="0 0 20 20" fill="currentColor">
+            <path fill-rule="evenodd" d="M4 4a2 2 0 012-2h8a2 2 0 012 2v12a1 1 0 110 2h-3a1 1 0 01-1-1v-2a1 1 0 00-1-1H9a1 1 0 00-1 1v2a1 1 0 01-1 1H4a1 1 0 110-2V4zm3 1h2v2H7V5zm2 4H7v2h2V9zm2-4h2v2h-2V5zm2 4h-2v2h2V9z" clip-rule="evenodd" />
+        </svg>
+        <p class="text-gray-500 mb-4">Nenhuma empresa encontrada.</p>
+        <a href="{{ url_for('create_empresa') }}" class="btn-primary inline-flex items-center">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" viewBox="0 0 20 20" fill="currentColor">
+                <path fill-rule="evenodd" d="M10 3a1 1 0 011 1v5h5a1 1 0 110 2h-5v5a1 1 0 11-2 0v-5H4a1 1 0 110-2h5V4a1 1 0 011-1z" clip-rule="evenodd" />
+            </svg>
+            Cadastrar Empresa
+        </a>
+    </div>
+</div>
+{% endif %}
+{% endblock %}
